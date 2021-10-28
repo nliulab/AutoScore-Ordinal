@@ -886,6 +886,7 @@ evaluate_model <- function(data, final_variables, score_table, cut_vec, n_boot,
 
 # Build_in_function -------------------------------------------------------
 
+
 #' @title Internal function: Compute scoring table based on training dataset
 #'   (AutoScore-Ordinal Module 3)
 #' @description Compute scoring table based on training dataset

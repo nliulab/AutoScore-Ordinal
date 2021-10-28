@@ -451,7 +451,7 @@ scoring_table <- AutoScore_Ordinal_fine_tuning(train_set,
 ##                     >=4            26  
 ## ==================  ============  =====
 ## ***Performance (based on Validation Set, after fine-tuning):
-## mAUC: 0.7335, 95% bootstrap CI: 0.7062-0.7615
+## mAUC: 0.7335, 95% bootstrap CI: 0.7046-0.7560
 ```
 
 ### STEP(v): Evaluate final risk scores on test dataset (AutoScore Module 6)

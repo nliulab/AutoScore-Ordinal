@@ -10,7 +10,11 @@ output:
 ```{r setup, include=FALSE}
 set.seed(1234)
 library(knitr)
+<<<<<<< HEAD
 opts_chunk$set(echo = TRUE, collapse = TRUE)
+=======
+opts_chunk$set(echo = TRUE, collapse = TRUE, cache = TRUE)
+>>>>>>> d1bf2bf226034d10d6de4a118a0ec69a3dfc6569
 ```
 
 # **AutoScore-Ordinal Introduction**

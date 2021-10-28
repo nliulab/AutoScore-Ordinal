@@ -23,7 +23,7 @@
 #' @examples
 #' # See AutoScore-Ordinal Guidebook for the whole 5-step workflow
 #' \dontrun{
-#' ranking <- AutoScoreOrdinal_rank(train_set, ntree=100)
+#' ranking <- AutoScore_Ordinal_rank(train_set, ntree=100)
 #' }
 #'
 #' @references
@@ -34,9 +34,13 @@
 #'  Application to Mortality Prediction Using Electronic Health Records, JMIR
 #'  Med Inform 2020;8(10):e21798, doi: 10.2196/21798}
 #' }
+#' @seealso \code{\link{AutoScore_Ordinal_parsimony}},
+#'   \code{\link{AutoScore_Ordinal_weighting}},
+#'   \code{\link{AutoScore_Ordinal_fine_tuning}},
+#'   \code{\link{AutoScore_Ordinal_testing}.
 #' @import randomForest
 #' @export
-AutoScoreOrdinal_rank <- function(train_set, ntree = 100) {
+AutoScore_Ordinal_rank <- function(train_set, ntree = 100) {
   train_set$label <- ordered(train_set$label) # Ordered factor
   model <- randomForest::randomForest(label ~ ., data = train_set, ntree = ntree,
                                       preProcess = "scale")
@@ -64,9 +68,9 @@ AutoScoreOrdinal_rank <- function(train_set, ntree = 100) {
 #' @param n_min Minimum number of selected variables (Default: 1).
 #' @param n_max Maximum number of selected variables (Default: 20).
 #' @param max_score Maximum total score (Default: 100).
-#' @param cross_validation If set to \code{TRUE}, cross-validation would be used
-#'   for generating parsimony plot, which is suitable for small-size data.
-#'   Default to \code{FALSE}
+#' @param cross_validation (not yet implemented) If set to \code{TRUE},
+#'   cross-validation would be used for generating parsimony plot, which is
+#'   suitable for small-size data. Default to \code{FALSE}
 #' @param fold The number of folds used in cross validation (Default: 10).
 #'   Available if cross_validation = TRUE.
 #' @param categorize  Methods for categorize continuous variables. Options
@@ -117,17 +121,21 @@ AutoScoreOrdinal_rank <- function(train_set, ntree = 100) {
 #'  Application to Mortality Prediction Using Electronic Health Records, JMIR
 #'  Med Inform 2020;8(10):e21798, doi: 10.2196/21798}
 #' }
-#' @seealso AutoScore_rank, AutoScore_parsimony, AutoScore_weighting,
-#' AutoScore_fine_tuning, AutoScore_testing
+#' @seealso \code{\link{AutoScore_Ordinal_rank}},
+#'   \code{\link{AutoScore_Ordinal_weighting}},
+#'   \code{\link{AutoScore_Ordinal_fine_tuning}},
+#'   \code{\link{AutoScore_Ordinal_testing}.
 #' @export
 #' @import  pROC
-AutoScoreOrdinal_parsimony <- function(train_set, validation_set, rank,
+AutoScore_Ordinal_parsimony <- function(train_set, validation_set, rank,
                                        max_score = 100, n_min = 1, n_max = 20,
                                        cross_validation = FALSE, fold = 10,
                                        categorize = "quantile",
                                        quantiles = c(0, 0.05, 0.2, 0.8, 0.95, 1),
                                        max_cluster = 5,
-                                       do_trace = FALSE) {
+                                       do_trace = FALSE,
+                                       auc_lim_min = 0.5,
+                                       auc_lim_max = "adaptive") {
   if (n_max > length(rank)) {
     warning("WARNING: the n_max (", n_max, ") is larger the number of all variables (",
             length(rank), "). We Automatically revise the n_max to ", length(rank))
@@ -135,8 +143,8 @@ AutoScoreOrdinal_parsimony <- function(train_set, validation_set, rank,
   }
   # Cross Validation scenario
   if (cross_validation == TRUE) {
+    stop(simpleMessage("Cross validation not yet implemented."))
     # Divide the data equally into n fold, record its index number
-    set.seed(4)
     index <- list()
     all <- 1:length(train_set[, 1])
     for (i in 1:(fold - 1)) {
@@ -180,7 +188,7 @@ AutoScoreOrdinal_parsimony <- function(train_set, validation_set, rank,
       if(do_trace){
         print(paste("list of AUC values for fold",j))
         print(data.frame(AUC))
-        plot(AUC, main = paste("Parsimony plot (cross validation) for fold",j), xlab = "Number of Variables", ylab = "Area Under the Curve", col = "red",
+        plot(AUC, main = paste("Parsimony plot (cross validation) for fold",j), xlab = "Number of Variables", ylab = "Area Under the Curve", col = "#2b8cbe",
              lwd = 2, type = "o")}
 
       # store AUC result from each fold into "auc_set"
@@ -193,11 +201,11 @@ AutoScoreOrdinal_parsimony <- function(train_set, validation_set, rank,
     auc_set$sum<-rowSums(auc_set)/fold
     cat("list of fianl AUC values through cross validation are shown below")
     print(data.frame(auc_set$sum))
-    plot(auc_set$sum, main = paste("Final Parsimony plot based on ", fold, "-fold Cross Validation",sep = ""), xlab = "Number of Variables", ylab = "Area Under the Curve", col = "red",
+    plot(auc_set$sum, main = paste("Final Parsimony plot based on ", fold, "-fold Cross Validation",sep = ""), xlab = "Number of Variables", ylab = "Area Under the Curve", col = "#2b8cbe",
          lwd = 2, type = "o")
     return(auc_set)
   } else {# Go through AUtoScore Module 2/3/4 in the loop
-    perform_stat <- do.call("rbind", lapply(n_min:n_max, function(i) {
+    mauc <- unlist(lapply(n_min:n_max, function(i) {
       cat("Select", i, "variables:  ")
       variable_list <- names(rank)[1:i]
       train_set_1 <- train_set[, c(variable_list, "label")]
@@ -209,16 +217,35 @@ AutoScoreOrdinal_parsimony <- function(train_set, validation_set, rank,
                                    quantiles = quantiles,
                                    max_cluster = max_cluster,
                                    max_score = max_score)
-      cumm_auc_i <- model_auc$auc[is.na(model_auc$j)]
-      cat(cumm_auc_i, "\n")
-      cbind(m = i, model_auc)
+      cat(model_auc, "\n")
+      model_auc
     }))
-    # names(vus) <- n_min:n_max
-    plot(x = n_min:n_max, y = perform_stat$auc[is.na(perform_stat$j)],
-         main = "Parsimony plot on the Validation Set",
-         xlab = "Number of Variables", ylab = "Mean Area Under the Curve",
-         col = "steelblue", lwd = 2, type = "o")
-    perform_stat
+    # output final results and plot parsimony plot
+    var_names <- factor(names(rank)[n_min:n_max], levels = names(rank)[n_min:n_max])
+    dt <- data.frame(mAUC = mauc, variables = var_names, num = n_min:n_max)
+    #cat("list of AUC values are shown below")
+    #print(data.frame(AUC))
+    if (auc_lim_max == "adaptive") {
+      auc_lim_max <- ceiling(max(dt$mAUC) * 10) / 10
+
+    }
+    p <- ggplot(data = dt, mapping = aes_string(x = "variables", y = "mAUC")) +
+      geom_bar(stat = "identity", fill = "steelblue") +
+      coord_cartesian(ylim = c(auc_lim_min, auc_lim_max)) +
+      theme_bw() +
+      labs(x = "", y = "Mean Area Under the Curve",
+           title = "Parsimony plot on the validation set") +
+      theme(legend.position = "none",
+            axis.text = element_text(size = 12),
+            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    # Add number of variables to bar:
+    if (nrow(dt) >= 100) {
+      print( p + geom_text(aes(label = num), vjust = 1.5, colour = "white", angle = 90))
+    } else {
+      print( p + geom_text(aes(label = num), vjust = 1.5, colour = "white"))
+    }
+    names(mauc) <- var_names
+    mauc
   }
 }
 #' @title AutoScore STEP(iii): Generate the initial score with the final list of variables (Re-run AutoScore Modules 2+3)
@@ -252,45 +279,45 @@ AutoScoreOrdinal_parsimony <- function(train_set, validation_set, rank,
 #'  \item{Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. AutoScore: A Machine Learning-Based Automatic Clinical Score Generator and
 #'   Its Application to Mortality Prediction Using Electronic Health Records. JMIR Medical Informatics 2020;8(10):e21798}
 #' }
+#' @seealso \code{\link{AutoScore_Ordinal_rank}},
+#'   \code{\link{AutoScore_Ordinal_parsimony}},
+#'   \code{\link{AutoScore_Ordinal_fine_tuning}},
+#'   \code{\link{AutoScore_Ordinal_testing}.
 #' @export
 #' @import knitr
-AutoScoreOrdinal_weighting <- function(train_set, validation_set, final_variables,
-                                       max_score = 100,
-                                       categorize = "quantile",
-                                       quantiles = c(0, 0.05, 0.2, 0.8, 0.95, 1),
-                                       max_cluster = 5) {
+AutoScore_Ordinal_weighting <- function(train_set, validation_set, final_variables,
+                                        max_score = 100,
+                                        categorize = "quantile",
+                                        quantiles = c(0, 0.05, 0.2, 0.8, 0.95, 1),
+                                        max_cluster = 5, n_boot = 100) {
   # prepare train_set and validation_set
   cat("****Included Variables: \n")
   print(data.frame(variable_name = final_variables))
   train_set_1 <- train_set[, c(final_variables, "label")]
-  validation_set_1 <- validation_set[, c(final_variables, "label")]
 
   # AutoScore Module 2 : cut numeric and transform categories and generate "cut_vec"
   cut_vec <- get_cut_vec(df = train_set_1, categorize = categorize,
                          quantiles = quantiles, max_cluster = max_cluster)
   train_set_2 <- transform_df_fixed(df = train_set_1, cut_vec = cut_vec)
-  validation_set_2 <- transform_df_fixed(df = validation_set_1, cut_vec = cut_vec)
 
   # AutoScore Module 3 : Score weighting
-  score_list <- compute_score_table(train_set_2 = train_set_2,
-                                    validation_set_2 = validation_set_2,
-                                    max_score = max_score,
-                                    variable_list = final_variables)
+  score_table <- compute_score_table(train_set_2 = train_set_2,
+                                     validation_set_2 = validation_set_2,
+                                     max_score = max_score,
+                                     variable_list = final_variables)
   cat("****Initial Scores: \n")
-  print_scoring_table(scoring_table = score_list$score_table,
-                      final_variable = final_variables)
-  # Using "auto_test" to generate score based on new dataset and Scoring table "score_table"
-  validation_set_3 <- assign_score(df = validation_set_2,
-                                   score_table = score_list$score_table)
-  validation_set_3$total_score <- rowSums(subset(validation_set_3,
-                                                 select = final_variables))
+  print_scoring_table(scoring_table = score_table, final_variable = final_variables)
 
   # Intermediate evaluation based on Validation Set
-  model_auc <- compute_mean_auc(y = validation_set_3$label,
-                                fx = validation_set_3$total_score)
+  perf_list <- evaluate_model(data = validation_set,
+                              final_variables = final_variables,
+                              score_table = score_table,
+                              cut_vec = cut_vec, n_boot = n_boot,
+                              report_cindex = FALSE)
   cat("***Performance (based on validation set):\n")
-  print(knitr::kable(model_auc), digits = 3)
-  cat("***The cutoffs of each variables generated by the AutoScoreOrdinal are saved in cut_vec. You can decide whether to revise or fine-tune them \n")
+  cat(sprintf("mAUC: %.4f, 95%% bootstrap CI: %.4f-%.4f\n",
+              perf_list$mauc, perf_list$mauc_ci[1], perf_list$mauc_ci[2]))
+  cat("***The cutoffs of each variables generated by the AutoScore-Ordinal are saved in cut_vec. You can decide whether to revise or fine-tune them \n")
   return(cut_vec)
 }
 
@@ -318,150 +345,239 @@ AutoScoreOrdinal_weighting <- function(train_set, validation_set, final_variable
 #'  \item{Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. AutoScore: A Machine Learning-Based Automatic Clinical Score Generator and
 #'   Its Application to Mortality Prediction Using Electronic Health Records. JMIR Medical Informatics 2020;8(10):e21798}
 #' }
+#' @seealso \code{\link{AutoScore_Ordinal_rank}},
+#'   \code{\link{AutoScore_Ordinal_parsimony}},
+#'   \code{\link{AutoScore_Ordinal_weighting}},
+#'   \code{\link{AutoScore_Ordinal_testing}.
 #' @import pROC
 #' @import ggplot2
 #' @export
-AutoScoreOrdinal_fine_tuning <- function(train_set, validation_set, final_variables,
-                                         cut_vec, max_score = 100) {
+AutoScore_Ordinal_fine_tuning <- function(train_set, validation_set, final_variables,
+                                         cut_vec, max_score = 100, n_boot = 100) {
   # Prepare train_set and VadalitionSet
   train_set_1 <- train_set[, c(final_variables, "label")]
-  validation_set_1 <- validation_set[, c(final_variables, "label")]
-
   # AutoScore Module 2 : cut numeric and transfer categories (based on fix "cut_vec" vector)
   train_set_2 <- transform_df_fixed(df = train_set_1, cut_vec = cut_vec)
-  validation_set_2 <- transform_df_fixed(df = validation_set_1, cut_vec = cut_vec)
-
   # AutoScore Module 3 : Score weighting
-  score_list <- compute_score_table(train_set_2 = train_set_2,
-                                    validation_set_2 = validation_set_2,
-                                    max_score = max_score,
-                                    variable_list = final_variables)
-  # Revised scoring table representation if possible @YuanHan
+  score_table <- compute_score_table(train_set_2 = train_set_2,
+                                     validation_set_2 = validation_set_2,
+                                     max_score = max_score,
+                                     variable_list = final_variables)
   cat("***Fine-tuned Scores: \n")
-  print_scoring_table(scoring_table = score_list$score_table,
-                      final_variable = final_variables)
+  print_scoring_table(scoring_table = score_table, final_variable = final_variables)
 
-  # Using "auto_test" to generate score based on new dataset and Scoring table "score_table"
-  validation_set_3 <- assign_score(df = validation_set_2,
-                                   score_table = score_list$score_table)
-  validation_set_3$total_score <- rowSums(subset(validation_set_3, select = -label))
-
-  # Intermediate evaluation based on Validation Set after fine-tuning
-  model_auc <- compute_mean_auc(y = validation_set_3$label,
-                                fx = validation_set_3$total_score)
+  perf_list <- evaluate_model(data = validation_set,
+                              final_variables = final_variables,
+                              score_table = score_table,
+                              cut_vec = cut_vec, n_boot = n_boot,
+                              report_cindex = FALSE)
   cat("***Performance (based on Validation Set, after fine-tuning):\n")
-  print(knitr::kable(model_auc, digits = 3))
-  return(score_list)
+  cat(sprintf("mAUC: %.4f, 95%% bootstrap CI: %.4f-%.4f\n",
+              perf_list$mauc, perf_list$mauc_ci[1], perf_list$mauc_ci[2]))
+  # sprintf("Generalised c-index: %.4f, 95% bootstrap CI: %.4f-%.4f\n",
+  #         perf_list$cindex, perf_list$cindex_ci[1], perf_list$cindex_ci[2])
+  # Intermediate evaluation based on Validation Set after fine-tuning
+  return(score_table)
 }
 
 
-#' @title AutoScore STEP(v): Evaluate the final score with ROC analysis (AutoScore Module 6)
+#' @title AutoScoreOrdinal STEP(v): Evaluate the final score with ROC analysis
+#'   (AutoScore Module 6)
 #' @description Domain knowledge is essential in guiding risk model development.
-#'  For continuous variables, the variable transformation is a data-driven process (based on "quantile", "kmeans" or "decision_tree).
-#'  In this step, the automatically generated cutoff values for each continuous variable can be fine-tuned
-#'  by combining, rounding, and adjusting according to the standard clinical norm.  Revised \code{cut_vec} will be input  with domain knowledge to
-#' update scoring table. User can choose any cut-off values/any number of categories. Then final Scoring table will be generated. See Guidebook.
+#'   For continuous variables, the variable transformation is a data-driven
+#'   process (based on "quantile", "kmeans" or "decision_tree). In this step,
+#'   the automatically generated cutoff values for each continuous variable can
+#'   be fine-tuned by combining, rounding, and adjusting according to the
+#'   standard clinical norm.  Revised \code{cut_vec} will be input  with domain
+#'   knowledge to update scoring table. User can choose any cut-off values/any
+#'   number of categories. Then final Scoring table will be generated. See
+#'   Guidebook.
 #'
-#' @param test_set A processed \code{data.frame} that contains data for testing purpose. This \code{data.frame} should have same format as
-#'        \code{train_set} (same variable names and outcomes)
-#' @param final_variables A vector containing the list of selected variables, selected from Step(ii). See Guidebook
-#' @param scoring_table The final scoring table after fine-tuning, generated from STEP(iv) \code{AutoScore_fine_tuning}.Please follow the guidebook
-#' @param cut_vec Generated from STEP(iii) \code{AutoScore_weighting()}.Please follow the guidebook
-#' @param threshold Score threshold for the ROC analysis to generate sensitivity, specificity, etc. If set to "best", the optimal threshold will be calculated (Default:"best").
-#' @param with_label Set to TRUE if there are labels in the test_set and performance will be evaluated accordingly (Default:TRUE).
+#' @param test_set A processed \code{data.frame} that contains data for testing
+#'   purpose. This \code{data.frame} should have same format as \code{train_set}
+#'   (same variable names and outcomes)
+#' @param final_variables A vector containing the list of selected variables,
+#'   selected from Step(ii). See Guidebook
+#' @param scoring_table The final scoring table after fine-tuning, generated
+#'   from STEP(iv) \code{AutoScore_fine_tuning}.Please follow the guidebook
+#' @param cut_vec Generated from STEP(iii) \code{AutoScore_weighting()}.Please
+#'   follow the guidebook
+#' @param threshold Score threshold for the ROC analysis to generate
+#'   sensitivity, specificity, etc. If set to "best", the optimal threshold will
+#'   be calculated (Default:"best").
+#' @param with_label Set to TRUE if there are labels in the test_set and
+#'   performance will be evaluated accordingly (Default:TRUE).
 #'
 #' @return A data frame with predicted score and the outcome for downstream visualization.
 #' @examples
 #' \dontrun{
-#' pred_score <- AutoScore_testing(test_set, final_variables, cut_vec,
-#' scoring_table, threshold = "best", with_label = TRUE)
+#' pred_score <- AutoScore_Ordinal_testing(test_set, final_variables, cut_vec,
+#' scoring_table)
 #' }
-#' @references
-#' \itemize{
-#'  \item{Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. AutoScore: A Machine Learning-Based Automatic Clinical Score Generator and
-#'   Its Application to Mortality Prediction Using Electronic Health Records. JMIR Medical Informatics 2020;8(10):e21798}
-#' }
+#' @seealso \code{\link{AutoScore_Ordinal_rank}},
+#'   \code{\link{AutoScore_Ordinal_parsimony}},
+#'   \code{\link{AutoScore_Ordinal_weighting}},
+#'   \code{\link{AutoScore_Ordinal_fine_tuning}}.
 #' @import pROC
+#' @importFrom survival Surv
+#' @import Hmisc
+#' @importFrom coxed bca
 #' @import ggplot2
 #' @export
-AutoScoreOrdinal_testing <- function(test_set, final_variables, cut_vec,
-                                     score_table, score_thresholds) {
-  # prepare testset: categorization and "auto_test"
-  test_set_1 <- test_set[, c(final_variables, "label")]
-  test_set_2 <- transform_df_fixed(df = test_set_1, cut_vec = cut_vec)
-  test_set_3 <- assign_score(df = test_set_2, score_table = score_table)
-  test_set_3$total_score <- rowSums(subset(test_set_3, select = final_variables))
-  if (anyNA(test_set_3$total_score)) {
-    warning(simpleWarning("NA in risk score. Check analyses."))
-    test_set_3$total_score[which(is.na(test_set_3$total_score))] <- 0
+AutoScore_Ordinal_testing <- function(test_set, final_variables, cut_vec,
+                                      score_table, with_label = TRUE,
+                                      n_boot = 100) {
+  # prepare test set: categorization and "auto_test"
+  if (with_label) {
+    test_set_1 <- test_set[, c(final_variables, "label")]
+  } else {
+    test_set_1 <- cbind(test_set[, final_variables], label = NA)
   }
-  y_test <- test_set_3$label
-  y_pred <- cut(x = test_set_3$total_score,
-                breaks = c(-Inf, score_thresholds, Inf),
-                labels = 1:(length(score_thresholds) + 1))
-  mae <- mean(abs(as.numeric(y_pred) - as.numeric(y_test)))
-
-  # Final evaluation based on testing set
-  model_auc <- compute_mean_auc(y = y_test, fx = test_set_3$total_score)
-  cat("***Performance using AutoScore (based on unseen test Set):\n")
-  print(knitr::kable(model_auc, digits = 3))
-  cat(sprintf("MAE = %.3f\n", mae))
-  return(c(AUC = model_auc, MAE = mae))
+  if (with_label) {
+    test_set_1$total_score <- compute_final_score(
+      data = test_set_1, final_variables = final_variables,
+      cut_vec = cut_vec, score_table = score_table
+    )
+    perf_list <- evaluate_model(data = test_set_1,
+                                final_variables = final_variables,
+                                score_table = score_table,
+                                cut_vec = cut_vec, n_boot = n_boot)
+    cat("***Performance using AutoScore-Ordinal (based on unseen test Set):\n")
+    cat(sprintf("mAUC: %.4f, 95%% bootstrap CI: %.4f-%.4f\n",
+                perf_list$mauc, perf_list$mauc_ci[1], perf_list$mauc_ci[2]))
+    cat(sprintf("Generalised c-index: %.4f, 95%% bootstrap CI: %.4f-%.4f\n",
+                perf_list$cindex, perf_list$cindex_ci[1], perf_list$cindex_ci[2]))
+    return(data.frame(pred_score = test_set_1$total_score, Label = test_set_1$label))
+  } else {
+    return(data.frame(pred_score = test_set_1$total_score, Label = NA))
+  }
 }
+
 
 # Direct_function ---------------------------------------------------------
 
-#' @title AutoScore function: Check whether the input dataset fulfill the requirement of the AutoScore
+#' @title AutoScoreOrdinal function: Check whether the input dataset fulfil the
+#'   requirement of the AutoScoreOrdinal
 #' @param data The data to be checked
 #' @examples
-#' data("sample_data")
-#' names(sample_data)[names(sample_data) == "Mortality_inpatient"] <- "label"
-#' check_data(sample_data)
+#' data("sample_data_ordinal")
+#' check_data(sample_data_ordinal)
+#' @return No return value, the result of the checking will be printed out.
 #' @export
-check_data<-function(data){
+check_data <- function(data) {
   #1. check label and binary
-  if (is.null(data$label)) {
-    stop("ERROR for this dataset: These is no dependent variable -lable- to indicate the outcome. Please add one first")
+  if (is.null(data$label))
+    stop(
+      "ERROR: for this dataset: These is no dependent variable 'label' to indicate the outcome. Please add one first\n"
+    )
+  if (!"factor" %in% class(data$label)) {
+    warning("Please code outcome label variable as a factor\n")
   }
-  if (!is.factor(data$label)) {
-    stop("ERROR for this dataset: Dependent variable should be an ordered factor. Please convert it using function 'ordered'")
-  }
+  if (length(levels(factor(data$label))) < 3)
+    warning("Please make sure outcome label variable has at least 3 categories\n")
 
   #2. check each variable
+  # Exclude label from data because no longer need to check outcome:
+  data <- data[, setdiff(names(data), "label")]
   non_num_fac <- c()
   fac_large <- c()
   special_case <- c()
 
-  for (i in setdiff(names(data), "label")) { # No longer need to check outcome
-    if ((class(data[[i]]) != "factor") && (class(data[[i]]) != "numeric")) {
+  for (i in names(data)) {
+    if ((class(data[[i]]) != "factor") &&
+        (class(data[[i]]) != "numeric"))
       non_num_fac <- c(non_num_fac, i)
-    }
-    if ((length(levels(data[[i]])) > 10) && (class(data[[i]]) == "factor")) {
+    if ((length(levels(data[[i]])) > 10) &&
+        (class(data[[i]]) == "factor"))
       fac_large <- c(fac_large, i)
+
+    if (grepl(",", i))
+      warning(
+        paste0(
+          "WARNING: the dataset has variable names '",
+          i,
+          "' with character ','. Please change it. Consider using '_' to replace\n"
+        )
+      )
+
+    if (grepl(")", i))
+      warning(
+        paste0(
+          "WARNING: the dataset has variable names '",
+          i,
+          "' with character ')'. Please change it. Consider using '_' to replace\n"
+        )
+      )
+
+    if (grepl("]", i))
+      warning(
+        paste0(
+          "WARNING: the dataset has variable names '",
+          i,
+          "' with character ']'. Please change it. Consider using '_' to replace\n"
+        )
+      )
+
+    if (class(data[[i]]) == "factor") {
+      if (sum(grepl(",", levels(data[[i]]))) > 0)
+        warning(
+          paste0(
+            "WARNING: the dataset has categorical variable '",
+            i,
+            "', where their levels contain ','. Please use 'levels(*your_variable*)' to change the name of the levels before using the AutoScore. Consider replacing ',' with '_'. Thanks! \n "
+          )
+        )
     }
-    if (grepl(",", i)) {
-      warning(paste("WARNING: the dataset has variable names", i,
-                    "with character , please change it"))
+
+
+    if (sum(grepl(i, names(data))) > 1) {
+      a <- names(data)[grepl(i, names(data))]
+      a <- a[a != i]
+      warning(
+        paste0(
+          "WARNING: the dataset has variable name '",
+          i,
+          "', which is entirely included by other variable names:\n",
+          paste(paste0("'", a, "'"), collapse = "  "),
+          "\nPlease use 'names(*your_df*)' to change the name of variable '",
+          i,
+          "' before using the AutoScore. Consider adding '_1', '_2',..., '_x, or other similar stuff at end of that name, such as '",
+          paste0(i, "_1") ,
+          "', to make them totally different and not contain each other. Thanks!\n "
+        )
+      )
+
     }
-    if (grepl(")", i)) {
-      warning(paste("WARNING: the dataset has variable names", i,
-                    "with character ) please change it"))
-    }
+
+
   }
 
-  if (!is.null(non_num_fac)) {
-    warning(paste("WARNING: the dataset has variable of character and they will be transformed to factor:", non_num_fac))
-  }
-  if (!is.null(fac_large)) {
-    warning(paste("WARNING: The number of categories for some variables is too many :larger than:", fac_large))
-  }
+  if (!is.null(non_num_fac))
+    warning(
+      paste(
+        "\nWARNING: the dataset has variable of character and user should transform them to factor or numeric before using AutoScore:(consider using 'df$xxx  <- as.factor(df$xxx))' or 'df$xxx  <- as.numeric(df$xxx))'\n",
+        non_num_fac
+      )
+    )
+  if (!is.null(fac_large))
+    warning(
+      paste(
+        "\nWARNING: The number of categories for some variables is too many :larger than: ",
+        fac_large
+      )
+    )
 
   #3. check missing values
   missing_rate <- colSums(is.na(data))
   if (sum(missing_rate)) {
-    warning("WARNING: Your dataset contains NA. Please handle them before AutoScore. The variables with missing values are shown below:")
+    warning(
+      "\n WARNING: Your dataset contains NA. Please handle them before AutoScore. The variables with missing values are shown below:"
+    )
     print(missing_rate[missing_rate != 0])
-  } else cat("missing value check passed.\n")
+  }
+  else
+    message("\n missing value check passed.\n")
+  #cat("Please fixed the problem of your dataset before AutoScore if you see any Warnings below.\n")
 }
 
 
@@ -473,6 +589,8 @@ check_data<-function(data){
 #' @param cross_validation If set to \code{TRUE}, cross-validation would be used
 #'   for generating parsimony plot, which is suitable for small-size data.
 #'   Default to \code{FALSE}
+#' @param strat_by_label If set to \code{TRUE}, data splitting is stratified on
+#'   the outcome variable. Default to \code{FALSE}
 #' @return Returns a list containing training, validation and testing set
 #' @examples
 #' data("sample_data")
@@ -482,33 +600,48 @@ check_data<-function(data){
 #' #small sample size
 #' out_split <- split_data(data = sample_data, ratio = c(0.7, 0, 0.3), cross_validation = TRUE)
 #' @export
-split_data <- function(data, ratio, cross_validation = FALSE) {
-  # non cross validation: default
-  if (cross_validation == FALSE) {
-    n <- length(data[, 1])
+split_data <- function(data, ratio, cross_validation = FALSE, strat_by_label = FALSE) {
+  if (!strat_by_label) {
+    n <- nrow(data)
     test_ratio <- ratio[3] / sum(ratio)
     validation_ratio <- ratio[2] / sum(ratio)
     test_index <- sample((1:n), test_ratio * n)
     validate_index <- sample((1:n)[!(1:n) %in% test_index], validation_ratio * n)
-    train_set <- data[-c(validate_index, test_index), ]
-    test_set <- data[test_index, ]
-    validation_set <- data[validate_index, ]
-
-    return(list(train_set = train_set, validation_set = validation_set,
-                test_set = test_set))
-  } else {# cross validation: train = validation
-    n <- length(data[, 1])
-    test_ratio <- ratio[3] / sum(ratio)
-    validation_ratio <- ratio[2] / sum(ratio)
-    test_index <- sample((1:n), test_ratio * n)
-    validate_index <- sample((1:n)[!(1:n) %in% test_index], validation_ratio * n)
-    train_set <- data[-c(test_index),]
-    test_set <- data[test_index,]
-    validation_set <- train_set
-
+    # non cross validation: default
+    if (cross_validation == FALSE) {
+      train_set <- data[-c(validate_index, test_index), ]
+      test_set <- data[test_index, ]
+      validation_set <- data[validate_index, ]
+    } else {# cross validation: train = validation
+      train_set <- data[-c(test_index),]
+      test_set <- data[test_index,]
+      validation_set <- train_set
+    }
     return(list(train_set = train_set, validation_set = validation_set,
                 test_set = test_set))
   }
+  ratio <- ratio / sum(ratio)
+  index_list <- lapply(levels(data$label), function(j) {
+    n_j <- which(data$label == j)
+    ind_test <- sample(n_j, round(ratio[3] * length(n_j)), replace = FALSE)
+    ind_val <- sample(setdiff(n_j, ind_test), round(ratio[2] * length(n_j)),
+                      replace = FALSE)
+    list(test = ind_test, val = ind_val)
+  })
+  index_test <- unlist(lapply(index_list, function(l) l$test))
+  index_validation <- unlist(lapply(index_list, function(l) l$val))
+  # non cross validation: default
+  if (cross_validation == FALSE) {
+    train_set <- data[-unlist(index_list), ]
+    test_set <- data[index_test, ]
+    validation_set <- data[index_validation, ]
+  } else {# cross validation: train = validation
+    train_set <- data[-c(index_test),]
+    test_set <- data[index_test,]
+    validation_set <- train_set
+  }
+  return(list(train_set = train_set, validation_set = validation_set,
+              test_set = test_set))
 }
 
 
@@ -568,12 +701,13 @@ compute_uni_variable_table <- function(df) {
 #' data("sample_data")
 #' names(sample_data)[names(sample_data) == "Mortality_inpatient"] <- "label"
 #' multi_table<-compute_multi_variable_table(sample_data)
+#' @import ordinal
 #' @export
 # full logistic model-multivariable analysis
 compute_multi_variable_table <- function(df) {
   J <- length(unique(df$label))
-  model <- clm(as.formula("label ~ ."), data = df,
-               link = "logit", na.action = na.omit)
+  model <- ordinal::clm(as.formula("label ~ ."), data = df,
+                        link = "logit", na.action = na.omit)
   mat <- cbind(exp(cbind(adjusted_OR = coef(model), confint.default(model))),
                summary(model)$coef[, "Pr(>|z|)"])
   multi_table <- matrix(mat[-(1:(J - 1)), ], ncol = 4)
@@ -592,75 +726,176 @@ compute_multi_variable_table <- function(df) {
 }
 
 
-#' @title AutoScore Function: print_scoring_table
-#' @description Print scoring tables for visulization
-#' @param scoring_table Raw scoring table generated by procedure
-#' @param final_variable Final included variables by predictor_rank
+#' @title AutoScore Function: Print scoring tables for visualization
+#' @param scoring_table Raw scoring table generated by AutoScore step(iv) \code{\link{AutoScore_fine_tuning}}
+#' @param final_variable Final included variables
 #' @return Data frame of formatted scoring table
-#' @examples
-#' \dontrun{
-#' print_scoring_table(scoring_table,final_variable)}
+#' @seealso \code{\link{AutoScore_fine_tuning}}, \code{\link{AutoScore_weighting}}
 #' @export
 #' @importFrom knitr kable
-print_scoring_table<-function(scoring_table,final_variable){
+print_scoring_table <- function(scoring_table, final_variable) {
   #library(knitr)
   table_tmp <- data.frame()
+  var_name <- names(scoring_table)
+  var_name_tmp <- gsub("\\(.*","",var_name)
+  var_name_tmp <- gsub("\\[.*","",var_name_tmp)
   for (i in 1:length(final_variable)) {
-    var_tmp<-final_variable[i]
-    var_name<-names(scoring_table)
-    num<-grepl(var_tmp,var_name)
-    table_1<-data.frame(name=var_name[num],value=unname(scoring_table[num]))
-    rank_indicator<-gsub(".*,","",table_1$name)
-    rank_indicator<-gsub(")","",rank_indicator)
-    if (grepl(",",table_1$name[1])!=TRUE){
-      table_1$rank_indicator<-c(seq(1:nrow(table_1)))
-      interval<-c(gsub(pattern = var_tmp, replacement = "", table_1$name))
-      table_1$interval<-interval
-      table_2<-table_1[order(table_1$interval),]
-      table_2$variable<-c(var_tmp,rep("",(nrow(table_2)-1)))
-      table_3<-rbind(table_2,rep("",ncol(table_2)))
-      table_tmp<-rbind(table_tmp,table_3)
+    var_tmp <- final_variable[i]
+    num <- grep(var_tmp, var_name_tmp)
+    if (grepl(",", var_name[num][1]) != TRUE) {
+      table_1 <- data.frame(name = var_name[num], value = unname(scoring_table[num]))
+      table_1$rank_indicator <- c(seq(1:nrow(table_1)))
+      interval <- c(gsub(pattern = var_tmp, replacement = "", table_1$name))
+      table_1$interval <- interval
+      table_2 <- table_1[order(table_1$interval),]
+      table_2$variable <- c(var_tmp, rep("", (nrow(table_2) - 1)))
+      table_3 <- rbind(table_2, rep("", ncol(table_2)))
+      table_tmp <- rbind(table_tmp, table_3)
     } else {
-      rank_indicator[which(rank_indicator=="")]<-max(as.numeric(rank_indicator[-which(rank_indicator=="")]))+1
-      rank_indicator<-as.numeric(rank_indicator)
-      if (length(rank_indicator)==2) {
-        table_1$rank_indicator<-rank_indicator
-        table_2<-table_1[order(table_1$rank_indicator),]
-        interval<-c(paste0("<",table_2$rank_indicator[1]))
-        interval<-c(interval,paste0(">=",table_2$rank_indicator[length(rank_indicator)-1]))
-        table_2$interval<-interval
-        table_2$variable<-c(var_tmp,rep("",(nrow(table_2)-1)))
-        table_3<-rbind(table_2,rep("",ncol(table_2)))
-        table_tmp<-rbind(table_tmp,table_3)
+      num <- grep(paste("^",var_tmp,"$", sep = ""), var_name_tmp)
+      table_1 <- data.frame(name = var_name[num], value = unname(scoring_table[num]))
+      rank_indicator <- gsub(".*,", "", table_1$name)
+      rank_indicator <- gsub(")", "", rank_indicator)
+      rank_indicator[which(rank_indicator == "")] <- max(as.numeric(rank_indicator[-which(rank_indicator == "")])) + 1
+      rank_indicator <- as.numeric(rank_indicator)
+      if (length(rank_indicator) == 2) {
+        table_1$rank_indicator <- rank_indicator
+        table_2 <- table_1[order(table_1$rank_indicator),]
+        interval <- c(paste0("<", table_2$rank_indicator[1]))
+        interval <- c(
+          interval,
+          paste0(">=", table_2$rank_indicator[length(rank_indicator) - 1])
+        )
+        table_2$interval <- interval
+        table_2$variable <- c(var_tmp, rep("", (nrow(table_2) - 1)))
+        table_3 <- rbind(table_2, rep("", ncol(table_2)))
+        table_tmp <- rbind(table_tmp, table_3)
       } else {
-        table_1$rank_indicator<-rank_indicator
-        table_2<-table_1[order(table_1$rank_indicator),]
-        interval<-c(paste0("<",table_2$rank_indicator[1]))
-        for (j in 1:(length(table_2$rank_indicator)-2)) {
-          interval<-c(interval,paste0("[",table_2$rank_indicator[j],",",table_2$rank_indicator[j+1],")"))
+        table_1$rank_indicator <- rank_indicator
+        table_2 <- table_1[order(table_1$rank_indicator),]
+        interval <- c(paste0("<", table_2$rank_indicator[1]))
+        for (j in 1:(length(table_2$rank_indicator) - 2)) {
+          interval <- c(
+            interval,
+            paste0("[", table_2$rank_indicator[j], ",",
+                   table_2$rank_indicator[j + 1], ")")
+          )
         }
-        interval<-c(interval,paste0(">=",table_2$rank_indicator[length(rank_indicator)-1]))
-        table_2$interval<-interval
-        table_2$variable<-c(var_tmp,rep("",(nrow(table_2)-1)))
-        table_3<-rbind(table_2,rep("",ncol(table_2)))
-        table_tmp<-rbind(table_tmp,table_3)
+        interval <- c(
+          interval,
+          paste0(">=", table_2$rank_indicator[length(rank_indicator) - 1])
+        )
+        table_2$interval <- interval
+        table_2$variable <- c(var_tmp, rep("", (nrow(table_2) - 1)))
+        table_3 <- rbind(table_2, rep("", ncol(table_2)))
+        table_tmp <- rbind(table_tmp, table_3)
       }
     }
   }
-  table_tmp<-table_tmp[1:(nrow(table_tmp)-1),]
-  table_final<-data.frame(variable = table_tmp$variable,interval = table_tmp$interval, point = table_tmp$value)
-  table_kable_format<-kable(table_final,align = "llc",caption = "AutoScore-created scoring model",format = "rst")
+  table_tmp <- table_tmp[1:(nrow(table_tmp) - 1),]
+  table_final <- data.frame(variable = table_tmp$variable,
+                            interval = table_tmp$interval,
+                            point = table_tmp$value)
+  table_kable_format <- kable(table_final, align = "llc",
+                              caption = "AutoScore-created scoring model",
+                              format = "rst")
   print(table_kable_format)
   invisible(table_final)
 }
 
+
+#' @inheritParams AutoScore_Ordinal_testing
+#' @param data A processed \code{data.frame} that contains data for validation
+#'   or testing purpose. This \code{data.frame} must have variable \code{label}
+#'   and should have same format as \code{train_set} (same variable names and
+#'   outcomes)
+compute_final_score <- function(data, final_variables, cut_vec,
+                                score_table) {
+  data_1 <- data[, c(final_variables, "label")]
+  data_2 <- transform_df_fixed(df = data_1, cut_vec = cut_vec)
+  data_3 <- assign_score(df = data_2, score_table = score_table)
+  data_3$total_score <- rowSums(subset(data_3, select = final_variables))
+  if (anyNA(data_3$total_score)) {
+    warning(simpleWarning("NA in risk score. Check analyses."))
+    data_3$total_score[which(is.na(data_3$total_score))] <- 0
+  }
+  data_3$total_score
+}
+#' @param data A processed \code{data.frame} that contains data for validation
+#'   or testing purpose. This \code{data.frame} must have variable \code{label}
+#'   and should have same format as \code{train_set} (same variable names and
+#'   outcomes)
+#' @param final_variables A vector containing the list of selected variables
+#' @param scoring_table The scoring table
+#' @param cut_vec Generated from STEP(iii)
+#'   \code{AutoScore_Ordinal_weighting()}.Please follow the guidebook
+#' @param report_cindex If generalised c-index should be reported alongside mean
+#'   AUC. Default is FALSE.
+#' @inheritParams AutoScore_Ordinal_testing
+#' @importFrom survival Surv
+#' @import Hmisc
+#' @importFrom coxed bca
+#' @import ggplot2
+#' @return Returns a list of the mean AUC (mauc) and generalised c-index
+#'   (cindex, if requested for) and their 95% bootstrap CIs (mauc_ci and cindex_ci).
+evaluate_model <- function(data, final_variables, score_table, cut_vec, n_boot,
+                           report_cindex = TRUE) {
+  data$total_score <- compute_final_score(
+    data = data, final_variables = final_variables,
+    cut_vec = cut_vec, score_table = score_table
+  )
+  model_auc <- compute_mean_auc(y = data$label, fx = data$total_score)
+  # Compute bootstrap CI:
+  data_list <- lapply(1:n_boot, function(iter) {
+    rows <- sample(x = 1:nrow(data), size = nrow(data), replace = TRUE)
+    data_boot <- data[rows, ]
+    data_boot$total_score <- compute_final_score(
+      data = data_boot, final_variables = final_variables,
+      cut_vec = cut_vec, score_table = score_table
+    )
+    data_boot
+  })
+  model_auc_boot <- unlist(lapply(data_list, function(data_boot) {
+    compute_mean_auc(y = data_boot$label, fx = data_boot$total_score)
+  }))
+  model_auc_ci <- coxed::bca(model_auc_boot, conf.level = 0.95)
+  if (report_cindex) {
+    model_cindex <- Hmisc::rcorrcens(
+      Surv(label, status) ~ pred_score,
+      data = data.frame(pred_score = data$total_score,
+                        label = as.numeric(data$label),
+                        status = 1)
+    )[, "C"]
+    model_cindex_boot <- unlist(lapply(data_list, function(data_boot) {
+      Hmisc::rcorrcens(
+        Surv(label, status) ~ pred_score,
+        data = data.frame(pred_score = data_boot$total_score,
+                          label = as.numeric(data_boot$label),
+                          status = 1)
+      )[, "C"]
+    }))
+    model_cindex_ci <- coxed::bca(model_cindex_boot, conf.level = 0.95)
+  } else {
+    model_cindex <- NULL
+    model_cindex_ci <- NULL
+  }
+  list(mauc = model_auc, mauc_ci = model_auc_ci,
+       cindex = model_cindex, cindex_ci = model_cindex_ci)
+}
+
+
 # Build_in_function -------------------------------------------------------
 
-
-#' Compute scoring table
-#' @param max_score Restrict the largest possible score to avoid large partial
-#'   scores that are difficult to use in practice. Set to \code{NULL} to not
-#'   pose any restriction.
+#' @title Internal function: Compute scoring table based on training dataset
+#'   (AutoScore-Ordinal Module 3)
+#' @description Compute scoring table based on training dataset
+#' @param train_set_2 Processed training set after variable transformation
+#'   (AutoScore-Ordinal Module 2)
+#' @param validation_set_2 Processed validation set after variable
+#'   transformation (AutoScore-Ordinal Module 2)
+#' @param max_score Maximum total score
+#' @param variable_list List of included variables
+#' @return A scoring table
 #' @import ordinal
 compute_score_table <- function(train_set_2, validation_set_2, max_score,
                                 variable_list) {
@@ -680,16 +915,13 @@ compute_score_table <- function(train_set_2, validation_set_2, max_score,
   # Second-step ordinal logistic regression
   model <- ordinal::clm(as.formula("label ~ ."), link = "logit", data = train_set_2)
   coef_vec <- model$beta
-  if (anyNA(coef_vec) > 0) {
+  if (anyNA(coef_vec)) {
     warning(" WARNING: GLM output contains NULL, Replace NULL with 1")
     coef_vec[which(is.na(coef_vec))] <- 1
   }
-  theta_vec <- model$alpha
-  thresholds <- compute_cutoffs(theta = theta_vec, link = "logit")
 
   # rounding for final scoring table "score_table"
   score_table <- add_baseline(train_set_2, round(coef_vec / min(coef_vec)))
-  score_thresholds <- round(thresholds / min(coef_vec))
 
   if (!is.null(max_score)) {
     # normalization according to "max_score" and regenerate score_table
@@ -699,9 +931,8 @@ compute_score_table <- function(train_set_2, validation_set_2, max_score,
       total <- total + max(score_table[grepl(variable_list[i], names(score_table))])
     }
     score_table <- round(score_table / (total / total_max))
-    score_thresholds <- round(score_thresholds / (total / total_max))
   }
-  return(list(score_table = score_table, score_thresholds = score_thresholds))
+  return(score_table)
 }
 
 
@@ -711,10 +942,8 @@ compute_score_table <- function(train_set_2, validation_set_2, max_score,
 #' @param fx Either (i) a numeric vector of predictor (e.g., predicted scores)
 #'   of length n or (ii) a numeric matrix of predicted cumulative probabilities
 #'   with n rows and (J-1) columns.
-#' @return A \code{data.frame} with the cumulative AUCs (i.e., when evaluating
-#'   the prediction of Y<=j, j=1,...,J-1) and 95% CI of AUC and the mean of
-#'   cumulative AUCs. The SE of the mean AUC is approximated by assuming
-#'   independence of cumulative AUCs.
+#' @return The mean AUC of J-1 cumulative AUCs (i.e., when evaluating
+#'   the prediction of Y<=j, j=1,...,J-1).
 #' @import pROC
 compute_mean_auc <- function(y, fx) {
   y <- as.numeric(y)
@@ -740,12 +969,19 @@ compute_mean_auc <- function(y, fx) {
                  auc_lower = auc_ci_vec[1], auc_upper = auc_ci_vec[3])
     }))
   }
-  # Approximate the SE of average AUC:
-  se_mean_auc <- sqrt(sum(auc_df$se ^ 2) / nrow(auc_df))
-  rbind(auc_df, data.frame(j = NA, auc = mean(auc_df$auc), se = se_mean_auc,
-                           auc_lower = mean(auc_df$auc) - 1.96 * se_mean_auc,
-                           auc_upper = mean(auc_df$auc) + 1.96 * se_mean_auc))
+  mean(auc_df$auc)
 }
+#' @title Internal function: Compute mean AUC based on validation set for
+#'   plotting parsimony (AutoScore-Ordinal Module 4)
+#' @description  Compute mean AUC based on validation set for plotting parsimony
+#' @param train_set_1 Processed training set
+#' @param validation_set_1 Processed validation set
+#' @param max_score Maximum total score
+#' @param variable_list List of included variables
+#' @param categorize  Methods for categorize continuous variables. Options include "quantile" or "kmeans"
+#' @param quantiles Predefined quantiles to convert continuous variables to categorical ones. Available if \code{categorize = "quantile"}.
+#' @param max_cluster The max number of cluster (Default: 5). Available if \code{categorize = "kmeans"}.
+#' @return The mean AUC for parsimony plot
 #' @import pROC
 compute_auc_val <- function(train_set_1, validation_set_1, variable_list,
                             categorize, quantiles, max_cluster, max_score) {
@@ -762,14 +998,14 @@ compute_auc_val <- function(train_set_1, validation_set_1, variable_list,
   }
 
   # AutoScore Module 3 : Variable Weighting
-  score_list <- compute_score_table(train_set_2 = train_set_2,
-                                    validation_set_2 = validation_set_2,
-                                    variable_list = variable_list,
-                                    max_score = max_score)
+  score_table <- compute_score_table(train_set_2 = train_set_2,
+                                     validation_set_2 = validation_set_2,
+                                     variable_list = variable_list,
+                                     max_score = max_score)
 
   # Using "auto_test" to generate score based on new dataset and Scoring table "score_table"
   validation_set_3 <- assign_score(df = validation_set_2,
-                                   score_table = score_list$score_table)
+                                   score_table = score_table)
   if (sum(is.na(validation_set_3)) > 0) {
     warning("NA in the validation_set_3: ", sum(is.na(validation_set_3)))
   }
@@ -780,9 +1016,21 @@ compute_auc_val <- function(train_set_1, validation_set_1, variable_list,
 
   compute_mean_auc(y = validation_set_3$label, fx = validation_set_3$total_score)
 }
+
+
+#' @title Internal function: Calculate cut_vec from the training set
+#'   (AutoScore-Ordinal Module 2)
+#' @param df training set to be used for calculate the cut vector
+#' @param categorize  Methods for categorize continuous variables. Options
+#'   include "quantile" or "kmeans" (Default: "quantile").
+#' @param quantiles Predefined quantiles to convert continuous variables to
+#'   categorical ones. (Default: c(0, 0.05, 0.2, 0.8, 0.95, 1)) Available if
+#'   \code{categorize = "quantile"}.
+#' @param max_cluster The max number of cluster (Default: 5). Available if
+#'   \code{categorize = "kmeans"}.
+#' @return cut_vec for \code{transform_df_fixed}
 get_cut_vec <- function(df, quantiles = c(0, 0.05, 0.2, 0.8, 0.95, 1),
                         max_cluster = 5, categorize = "quantile") {
-
   # Generate cut_vec for downstream usage
   cut_vec <- list()
 
@@ -796,9 +1044,6 @@ get_cut_vec <- function(df, quantiles = c(0, 0.05, 0.2, 0.8, 0.95, 1),
         warning("WARNING: The number of categories should be less than 10",
                 names(df)[i])
     }
-
-    # for continuous variable: variable transformation
-    # select discretization method, default mode = 1
 
     ## mode 1 - quantiles
     if (categorize == "quantile") {
@@ -817,7 +1062,8 @@ get_cut_vec <- function(df, quantiles = c(0, 0.05, 0.2, 0.8, 0.95, 1),
       for (j in unique(clusters$cluster)) {
         #print(min(df[,i][clusters$cluster==j]))
         #print(length(df[,i][clusters$cluster==j]))
-        cut_off_tmp <- append(cut_off_tmp, min(df[, i][clusters$cluster == j]))
+        cut_off_tmp <-
+          append(cut_off_tmp, min(df[, i][clusters$cluster == j]))
         #print(cut_off_tmp)
       }
       cut_off_tmp <- append(cut_off_tmp, max(df[, i]))
@@ -839,9 +1085,17 @@ get_cut_vec <- function(df, quantiles = c(0, 0.05, 0.2, 0.8, 0.95, 1),
     #print("****************************cut_vec*************************")
     #print(cut_vec)
   }
-  for(i in 1:length(cut_vec)) cut_vec[[i]] <- cut_vec[[i]][2:(length(cut_vec[[i]]) - 1)]
+  ## delete min and max for each cut-off (min and max will be captured in the new dataset)
+  for (i in 1:length(cut_vec)) {
+    if (length(cut_vec[[i]]) <= 2)
+      cut_vec[[i]] <- c("let_binary")
+    else
+      cut_vec[[i]] <- cut_vec[[i]][2:(length(cut_vec[[i]]) - 1)]
+  }
   return(cut_vec)
 }
+
+
 #' @title Internal function: Categorizing continuous variables based on fixed cut_vec
 #' @param df dataset to be processed
 #' @param cut_vec fixed cut vector
@@ -851,37 +1105,47 @@ transform_df_fixed <- function(df, cut_vec) {
 
   # for loop going through all variables
   for (i in 1:(length(df) - 1)) {
-
     if (class(df[, i]) == "factor") {
       if (length(levels(df[, i])) < 10)
-        (next)() else stop("ERROR: The number of categories should be less than 10")
+        (next)()
+      else
+        stop("ERROR: The number of categories should be less than 9")
     }
 
     ## make conresponding cutvec for validation_set: cut_vec_new
-    vec<-df[, i]
+    #df<-validation_set_1
+    #df<-train_set_1
+    vec <- df[, i]
     cut_vec_new <- cut_vec[[j]]
-    if(min(vec) < cut_vec[[j]][1]) {
-      cut_vec_new <- c(floor(min(df[, i]))-100, cut_vec_new)
-    }
-    if(max(vec) >= cut_vec[[j]][length(cut_vec[[j]])]) {
-      cut_vec_new <- c(cut_vec_new, ceiling(max(df[, i])+100))
-    }
 
-    cut_vec_new_tmp <- signif(cut_vec_new, 3)
-    cut_vec_new_tmp <- unique(cut_vec_new_tmp)  ###revised update##
-    df[, i] <- cut(df[, i], breaks = cut_vec_new_tmp, right = F,
-                   include.lowest = F, dig.lab = 3)
-    # xmin<-as.character(min(cut_vec_new_tmp)) xmax<-as.character(max(cut_vec_new_tmp))
+    if (cut_vec_new[1] == "let_binary") {
+      vec[vec != getmode(vec)] <- paste0("not_", getmode(vec))
+      vec <- as.factor(vec)
+      df[, i] <- vec
+    } else{
+      if (min(vec) < cut_vec[[j]][1])
+        cut_vec_new <- c(floor(min(df[, i])) - 100, cut_vec_new)
+      if (max(vec) >= cut_vec[[j]][length(cut_vec[[j]])])
+        cut_vec_new <- c(cut_vec_new, ceiling(max(df[, i]) + 100))
 
-    ## delete min and max for the Interval after discretion: validation_set
-    if(min(vec) < cut_vec[[j]][1]) {
-      levels(df[, i])[1] <- gsub(".*,", "(,", levels(df[, i])[1])
-    }
-    if(max(vec) >= cut_vec[[j]][length(cut_vec[[j]])]) {
-      levels(df[, i])[length(levels(df[, i]))] <- gsub(
-        ",.*", ",)",
-        levels(df[, i])[length(levels(df[, i]))]
-      )
+      cut_vec_new_tmp <- signif(cut_vec_new, 3)
+      cut_vec_new_tmp <- unique(cut_vec_new_tmp)  ###revised update##
+      df[, i] <-
+        cut(
+          df[, i],
+          breaks = cut_vec_new_tmp,
+          right = F,
+          include.lowest = F,
+          dig.lab = 3
+        )
+      # xmin<-as.character(min(cut_vec_new_tmp)) xmax<-as.character(max(cut_vec_new_tmp))
+
+      ## delete min and max for the Interval after discretion: validation_set
+      if (min(vec) < cut_vec[[j]][1])
+        levels(df[, i])[1] <- gsub(".*,", "(,", levels(df[, i])[1])
+      if (max(vec) >= cut_vec[[j]][length(cut_vec[[j]])])
+        levels(df[, i])[length(levels(df[, i]))] <-
+        gsub(",.*", ",)", levels(df[, i])[length(levels(df[, i]))])
     }
 
     j <- j + 1
@@ -953,135 +1217,76 @@ add_baseline <- function(df, coef_vec) { # Proposed new version
 #' @param score_table A \code{vector} containing the scoring table
 #' @return Processed \code{data.frame} with assigned scores for each variables
 assign_score <- function(df, score_table) {
-  for (i in 1:(length(names(df))-1)) {
+  df_new <- as.data.frame(matrix(NA, ncol = ncol(df), nrow = nrow(df)))
+  names(df_new) <- names(df)
+  for (i in 1:(length(names(df)) - 1)) {
     score_table_tmp <- score_table[grepl(names(df)[i], names(score_table))]
     df[, i] <- as.character(df[, i])
     for (j in 1:length(names(score_table_tmp))) {
-      df[, i][df[, i] %in% gsub(names(df)[i], "", names(score_table_tmp)[j])] <-
+      df_new[, i][df[, i] %in% gsub(names(df)[i], "", names(score_table_tmp)[j])] <-
         score_table_tmp[j]
     }
 
-    df[, i] <- as.numeric(df[, i])
+    df_new[, i] <- as.numeric(df_new[, i])
   }
-
-  return(df)
+  df_new[, ncol(df)] <- df[, ncol(df)]
+  return(df_new)
 }
 
 
-#' @title Build-in Function: Categorizing continuous variables based on fixed cut_vec(AutoScore Module 2)
-#' @param df dataset to be processed
-#' @return  Processed \code{data.frame} after Categorizing based on fixed cut_vec
-#' @seealso
+#' @title Internal function: Categorizing continuous variables based on cut_vec
+#'   (AutoScore Module 2)
+#' @param df dataset(training, validation or testing) to be processed
+#' @param cut_vec fixed cut vector
+#' @return  Processed \code{data.frame} after categorizing based on fixed cut_vec
 transform_df_fixed <- function(df, cut_vec) {
   j <- 1
 
   # for loop going through all variables
   for (i in 1:(length(df) - 1)) {
-
     if (class(df[, i]) == "factor") {
       if (length(levels(df[, i])) < 10)
-        (next)() else stop("Error!! The number of categories should be less than 9")
+        (next)()
+      else
+        stop("ERROR: The number of categories should be less than 9")
     }
 
     ## make conresponding cutvec for validation_set: cut_vec_new
     vec <- df[, i]
     cut_vec_new <- cut_vec[[j]]
-    if(min(vec) < cut_vec[[j]][1]) cut_vec_new <- c(floor(min(df[, i]))*0.8, cut_vec_new)
-    if(max(vec) >= cut_vec[[j]][length(cut_vec[[j]])] ) {
-      cut_vec_new <- c(cut_vec_new, ceiling(max(df[, i])*1.2))
+
+    if (cut_vec_new[1] == "let_binary") {
+      vec[vec != getmode(vec)] <- paste0("not_", getmode(vec))
+      vec <- as.factor(vec)
+      df[, i] <- vec
+    } else {
+      if (min(vec) < cut_vec[[j]][1])
+        cut_vec_new <- c(floor(min(df[, i])) - 100, cut_vec_new)
+      if (max(vec) >= cut_vec[[j]][length(cut_vec[[j]])])
+        cut_vec_new <- c(cut_vec_new, ceiling(max(df[, i]) + 100))
+
+      cut_vec_new_tmp <- signif(cut_vec_new, 3)
+      cut_vec_new_tmp <- unique(cut_vec_new_tmp)  ###revised update##
+      df[, i] <- cut(df[, i], breaks = cut_vec_new_tmp, right = F,
+                     include.lowest = F, dig.lab = 3)
+      # xmin<-as.character(min(cut_vec_new_tmp)) xmax<-as.character(max(cut_vec_new_tmp))
+
+      ## delete min and max for the Interval after discretion: validation_set
+      if (min(vec) < cut_vec[[j]][1])
+        levels(df[, i])[1] <- gsub(".*,", "(,", levels(df[, i])[1])
+      if (max(vec) >= cut_vec[[j]][length(cut_vec[[j]])])
+        levels(df[, i])[length(levels(df[, i]))] <-
+        gsub(",.*", ",)", levels(df[, i])[length(levels(df[, i]))])
     }
 
-    cut_vec_new_tmp <- signif(cut_vec_new, 3)
-    cut_vec_new_tmp <- unique(cut_vec_new_tmp)  ###revised update##
-    df[, i] <- cut(df[, i], breaks = cut_vec_new_tmp, right = F, include.lowest = F, dig.lab = 3)
-
-    ## delete min and max for the Interval after discretion: validation_set
-    if(min(vec) < cut_vec[[j]][1]) levels(df[, i])[1] <- gsub(".*,", "(,", levels(df[, i])[1])
-    if(max(vec) >= cut_vec[[j]][length(cut_vec[[j]])] ) levels(df[, i])[length(levels(df[, i]))] <- gsub(",.*", ",)", levels(df[, i])[length(levels(df[, i]))])
     j <- j + 1
   }
   return(df)
 }
 
-# CLM specific ------------------------------------------------------------
 
-inv_logit <- function(x) {
-  exp(x) / (1 + exp(x))
+getmode <- function(vect) {
+  uniqvect <- unique(vect)
+  uniqvect[which.max(tabulate(match(vect, uniqvect)))]
 }
-inv_cloglog <- function(x) {
-  1 - exp(-exp(x))
-}
-inv_loglog <- function(x) {
-  exp(-exp(-x))
-}
-inv_probit <- function(x) {
-  pnorm(x)
-}
-estimate_p_mat <- function(theta, z, link) {
-  n <- length(z)
-  inv_link <- get(paste0("inv_", link))
-  cump_mat <- inv_link(matrix(rep(theta, n), nrow = n, byrow = TRUE) -
-                         matrix(rep(z, length(theta)), nrow = n, byrow = FALSE))
-  cump_mat <- cbind(0, cump_mat, 1)
-  t(apply(cump_mat, 1, diff))
-}
-#' Compute the cutoff values for X%*%beta from theta terms of a CLM
-#' @param theta theta terms of a CLM. For an outcome with J categories, there
-#'   should be J-1 elements in \code{theta}.
-#' @param z A numeric vector for the predictor value. Make sure the range is
-#'   sufficient for all intersection between probability curves to intersect.
-#'   Default is \code{NULL} for \code{link = "logit"}.
-#' @param link Link function of the CLM. Possible values are \code{"logit"}
-#'   (default), \code{"probit"}, \code{"cloglog"} and \code{"loglog"}.
-#' @return Returns a numeric vector of length J-1.
-#' @import reconPlots
-#' @export
-compute_cutoffs <- function(theta, z = NULL, link) {
-  link <- match.arg(arg = link, choices = c("logit", "probit", "cloglog", "loglog"))
-  if (link == "logit") {
-    J <- length(theta) + 1
-    cutoff <- NULL
-    if (J > 3) {# Check for bug
-      cutoff <- unlist(lapply(2:(J - 2), function(j) {
-        log((2 * exp(theta[j - 1] + theta[j + 1]) -
-               exp(theta[j - 1] + theta[j]) -
-               exp(theta[j] + theta[j + 1])) /
-              (2 * exp(theta[j]) - exp(theta[j - 1]) - exp(theta[j + 1])))
-      }))
-    }
-    sort(c(theta[1] + theta[2] - log(exp(theta[2]) - 2 * exp(theta[1])),
-           cutoff,
-           log(exp(theta[J - 1]) - 2 * exp(theta[J - 2]))))
-  } else {
-    if (is.null(z)) stop(simpleError("z is required when link is not logit."))
-    p_mat <- estimate_p_mat(theta = theta, z = z, link = link)
-    unlist(lapply(1:(ncol(p_mat) - 1), function(j) {
-      reconPlots::curve_intersect(curve1 = data.frame(x = z, y = p_mat[, j]),
-                                  curve2 = data.frame(x = z, y = p_mat[, j + 1]),
-                                  empirical = TRUE)$x
-    }))
-  }
-}
-#' Optimise thresholds for total score using cumulative ROC analyses
-#' @param y Observed ordinal outcome.
-#' @param total_score Total score generated from AutoScore framework.
-#' @import pROC
-optimise_thresholds <- function(y, total_score) {
-  y <- as.numeric(ordered(y))
-  J <- length(unique(y))
-  do.call("rbind", lapply(1:(J - 1), function(j) {
-    # ROC analysis of {1, ..., j} vs {j+1, ..., J}
-    y_j <- as.numeric(y <= j)
-    roc_j <- pROC::roc(response = y_j, predictor = total_score)
-    auc_ci_j <- pROC::ci(roc_j)
-    metric_j <- pROC::coords(
-      roc = roc_j, x = "best", best.method = "closest.topleft",
-      ret = c("threshold", "specificity", "sensitivity", "npv", "ppv"),
-      transpose = TRUE
-    )
-    as.data.frame(as.list(c(
-      j = j, auc = auc_ci_j[2], auc_ci_lower = auc_ci_j[1],
-      auc_ci_upper = auc_ci_j[3], metric_j
-    )))
-  }))
-}
+

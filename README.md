@@ -84,57 +84,57 @@ library(AutoScoreOrdinal)
     distribution to the data used in the paper.
 
 ``` r
-load("../data/sample_data_ordinal.rda")
+data("sample_data_ordinal")
 head(sample_data_ordinal)
-##           ED_LOS Age Gender    Race Triage_Class_Code EDBoardingTime
-## 339445 3.5933333  27   MALE Chinese                P2           3.33
-## 152316 3.6288889  70 FEMALE   Malay                P2           8.15
-## 434455 2.6502778  67   MALE Chinese                P2           6.58
-## 422608 4.9711111  79 FEMALE Chinese         P3 and P4           5.53
-## 180459 0.5352778  84   MALE Chinese                P2           1.67
-## 357148 4.4008333  65 FEMALE   Malay         P3 and P4           5.22
-##        ConsultationWaitingTime DayofWeek VENTILATION resuscitation
-## 339445                    0.96         4           0             0
-## 152316                    0.00         4           0             0
-## 434455                    0.76         2           0             0
-## 422608                    1.29         4           0             0
-## 180459                    0.30         4           0             0
-## 357148                    3.11         2           0             0
-##        Num_visit_last_1yr Total_Num_Surgery_last1yr Total_icu_count_last1yr
-## 339445                  0                         0                       0
-## 152316                  0                         0                       0
-## 434455                  0                         0                       0
-## 422608                  0                         0                       0
-## 180459                  0                         0                       0
-## 357148                  0                         0                       0
-##        Total_hd_count_last1yr label Admission_Type_4cat LOS_prev Pulse
-## 339445                      0     1                  B2        0    92
-## 152316                      0     1                   C        0    65
-## 434455                      0     1                   C        0    78
-## 422608                      0     1                   C        0    81
-## 180459                      0     1                   C        0    63
-## 357148                      0     1                   C        0   107
-##        Respiration SPO2 BP_Diastolic BP_Systolic BICARBONATE CREATININE
-## 339445          19  100           75         128        23.0         83
-## 152316          18   97           86         183        24.3         47
-## 434455          19   98           76         140        19.3        269
-## 422608          19   99          138         220        21.9        116
-## 180459          18   97           62         115        21.3        234
-## 357148          18   98           79         133        23.2         55
-##        POTASSIUM SODIUM MI CHF PVD Stroke Dementia Pulmonary Rheumatic PUD
-## 339445       4.1    136  0   0   0      0        0         0         0   0
-## 152316       3.5    137  0   0   0      0        0         0         0   0
-## 434455       5.0    137  0   0   0      0        0         0         0   0
-## 422608       4.0    139  0   0   0      0        0         0         0   0
-## 180459       4.2    133  0   0   0      0        0         0         0   0
-## 357148       3.8    133  0   0   0      0        0         0         0   0
-##        LiverMild DM_disease DMcx Paralysis Renal Cancer LiverSevere Mets
-## 339445         0          0    0         0     0      0           0    0
-## 152316         0          0    1         0     0      0           0    0
-## 434455         0          0    0         0     1      0           0    0
-## 422608         0          0    0         0     0      0           0    0
-## 180459         0          1    0         0     1      0           0    0
-## 357148         0          0    1         0     0      0           0    0
+##      ED_LOS Age Gender    Race Triage_Class_Code EDBoardingTime
+## 1 3.5933333  63 FEMALE   Malay                P2           8.72
+## 2 3.6288889  41 FEMALE   Malay                P2           1.28
+## 3 2.6502778  86   MALE Chinese                P1           6.00
+## 4 4.9711111  51   MALE Chinese                P2           7.13
+## 5 0.5352778  23 FEMALE  Indian                P1           1.53
+## 6 4.4008333  32 FEMALE  Indian                P2           3.47
+##   ConsultationWaitingTime DayofWeek VENTILATION resuscitation
+## 1                    0.60         4           0             0
+## 2                    0.97         4           0             0
+## 3                    1.04         4           0             0
+## 4                    1.21         4           0             0
+## 5                    0.59         4           0             0
+## 6                    0.76         4           0             0
+##   Num_visit_last_1yr Total_Num_Surgery_last1yr Total_icu_count_last1yr
+## 1                  0                         0                       0
+## 2                  0                         1                       0
+## 3                  0                         0                       0
+## 4                  0                         0                       0
+## 5                  0                         0                       0
+## 6                  0                         0                       0
+##   Total_hd_count_last1yr label Admission_Type_4cat LOS_prev Pulse Respiration
+## 1                      0     1                  B2     0.00    91          19
+## 2                      0     1                  B2     0.96    91          16
+## 3                      0     1                  A1     0.00   100          18
+## 4                      0     1                  B2     0.00    73          17
+## 5                      0     1                  B2     0.00    74          18
+## 6                      0     1                  B2     4.13    77          18
+##   SPO2 BP_Diastolic BP_Systolic BICARBONATE CREATININE POTASSIUM SODIUM MI CHF
+## 1  100           70         152        25.7        117       3.9    136  0   0
+## 2  100           70         147        22.6        500       3.6    114  0   0
+## 3   99           65         126        25.7         72       4.1    136  0   0
+## 4   97           46         100        24.9         67       5.0    122  0   0
+## 5   98           89         114        25.7       1036       4.1    138  0   0
+## 6   98           74         157        25.3        806       4.1    136  0   0
+##   PVD Stroke Dementia Pulmonary Rheumatic PUD LiverMild DM_disease DMcx
+## 1   0      0        0         0         0   0         1          0    0
+## 2   0      0        0         1         0   1         0          1    0
+## 3   0      0        0         0         0   0         0          0    0
+## 4   0      0        0         0         0   0         0          0    0
+## 5   0      0        0         0         0   0         0          0    1
+## 6   0      0        0         0         0   0         0          1    1
+##   Paralysis Renal Cancer LiverSevere Mets
+## 1         0     1      0           0    0
+## 2         0     0      0           0    0
+## 3         0     1      0           0    0
+## 4         0     0      0           0    0
+## 5         0     0      0           0    0
+## 6         0     0      0           0    0
 ```
 
 ### Data preprocessing (Users to check the following)
@@ -198,34 +198,34 @@ test_set <- out_split$test_set
 ``` r
 ranking <- AutoScore_Ordinal_rank(train_set = train_set, ntree = 100)
 ## The ranking based on variable importance was shown below for each variable: 
-##                    ED_LOS                       Age                CREATININE 
-##                281.026964                277.826873                274.249058 
-##               BICARBONATE                  LOS_prev        Num_visit_last_1yr 
-##                268.176957                267.573845                266.465760 
-##               BP_Systolic            EDBoardingTime                     Pulse 
-##                259.809568                258.183854                250.924184 
-##              BP_Diastolic   ConsultationWaitingTime                    SODIUM 
-##                234.197849                227.823404                217.524249 
-##                 POTASSIUM                      Mets               Respiration 
-##                211.646130                145.067351                135.346953 
-##                      SPO2                 DayofWeek         Triage_Class_Code 
-##                134.369792                112.036086                 71.949647 
-##       Admission_Type_4cat                      Race                     Renal 
-##                 71.637172                 70.277671                 49.440464 
-## Total_Num_Surgery_last1yr                    Gender                        MI 
-##                 48.980815                 41.232014                 39.129263 
-##                    Cancer                      DMcx                       CHF 
-##                 38.252953                 34.371165                 32.148785 
-##    Total_hd_count_last1yr                DM_disease                    Stroke 
-##                 30.331055                 28.710326                 28.351551 
-##                 Pulmonary                 LiverMild                       PVD 
-##                 27.033979                 25.335346                 25.308722 
-##               LiverSevere                 Paralysis                  Dementia 
-##                 21.945582                 21.458072                 16.993113 
-##                       PUD             resuscitation               VENTILATION 
-##                 16.028545                 13.720929                 11.927190 
-##   Total_icu_count_last1yr                 Rheumatic 
-##                  9.475186                  7.955148
+##                    ED_LOS                       Age                     Pulse 
+##               295.1751048               279.4486712               275.7915008 
+##                CREATININE               BICARBONATE               BP_Systolic 
+##               274.3689229               274.1921965               270.2830318 
+##            EDBoardingTime   ConsultationWaitingTime              BP_Diastolic 
+##               269.3350087               245.3335064               238.2404464 
+##                 POTASSIUM                    SODIUM                  LOS_prev 
+##               216.6578878               199.0595672               178.2319358 
+##        Num_visit_last_1yr                      SPO2               Respiration 
+##               174.7796118               140.5779487               125.5648099 
+##                      Mets                 DayofWeek       Admission_Type_4cat 
+##               115.0377463               109.7045225                82.5270306 
+##                      Race         Triage_Class_Code Total_Num_Surgery_last1yr 
+##                79.9933022                70.7209621                48.8358944 
+##                    Gender                      DMcx    Total_hd_count_last1yr 
+##                38.6643611                32.6850597                32.2837377 
+##                     Renal                    Stroke                DM_disease 
+##                31.3256323                29.0438284                26.1299721 
+##                       CHF                 Pulmonary                    Cancer 
+##                23.2271458                22.9750173                21.8470042 
+##                       PVD                        MI                 LiverMild 
+##                19.6369170                18.6250098                17.9263123 
+##                  Dementia                 Paralysis                       PUD 
+##                17.1947699                17.1266926                13.5934333 
+##             resuscitation   Total_icu_count_last1yr               LiverSevere 
+##                11.9823329                 9.6201264                 8.9651893 
+##                 Rheumatic               VENTILATION 
+##                 8.7027377                 0.2250472
 ```
 
 ### STEP(ii): Select the best model with parsimony plot (AutoScore Modules 2+3+4)
@@ -257,26 +257,26 @@ mAUC <- AutoScore_Ordinal_parsimony(
   quantiles = c(0, 0.05, 0.2, 0.8, 0.95, 1), 
   auc_lim_min = 0
 )
-## Select 1 variables:  0.4007599 
-## Select 2 variables:  0.5293802 
-## Select 3 variables:  0.6810808 
-## Select 4 variables:  0.6928276 
-## Select 5 variables:  0.7049731 
-## Select 6 variables:  0.7302284 
-## Select 7 variables:  0.7329536 
-## Select 8 variables:  0.7331184 
-## Select 9 variables:  0.7581485 
-## Select 10 variables:  0.7590899 
-## Select 11 variables:  0.7592438 
-## Select 12 variables:  0.7626986 
-## Select 13 variables:  0.7627602 
-## Select 14 variables:  0.7958155 
-## Select 15 variables:  0.7950922 
-## Select 16 variables:  0.796445 
-## Select 17 variables:  0.7947679 
-## Select 18 variables:  0.80253 
-## Select 19 variables:  0.8033686 
-## Select 20 variables:  0.8020225
+## Select 1 variables:  0.4581387 
+## Select 2 variables:  0.5145623 
+## Select 3 variables:  0.6528213 
+## Select 4 variables:  0.6716182 
+## Select 5 variables:  0.6741575 
+## Select 6 variables:  0.6823551 
+## Select 7 variables:  0.6806747 
+## Select 8 variables:  0.6793723 
+## Select 9 variables:  0.6811396 
+## Select 10 variables:  0.6785473 
+## Select 11 variables:  0.6783959 
+## Select 12 variables:  0.6805645 
+## Select 13 variables:  0.7159785 
+## Select 14 variables:  0.7148 
+## Select 15 variables:  0.7151882 
+## Select 16 variables:  0.768855 
+## Select 17 variables:  0.7637719 
+## Select 18 variables:  0.7637437 
+## Select 19 variables:  0.7642515 
+## Select 20 variables:  0.7626574
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
@@ -297,9 +297,8 @@ final_variables <- names(ranking[1:num_var])
 num_var <- 9
 final_variables <- names(ranking[1:num_var])
 
-# Example 3: Top 6 variables, the 9th and 14th variable are selected
-num_var <- 6
-final_variables <- names(ranking[c(1:num_var, 9, 14)])
+# Example 3: Top 6 variables, the 13th and 16th variable are selected
+final_variables <- names(ranking[c(1:6, 13, 16)])
 ```
 
 ### STEP(iii): Generate initial scores with the final list of variables (Re-run AutoScore Modules 2+3)
@@ -319,50 +318,63 @@ cut_vec <- AutoScore_Ordinal_weighting(
 ##        variable_name
 ## 1             ED_LOS
 ## 2                Age
-## 3         CREATININE
-## 4        BICARBONATE
-## 5           LOS_prev
-## 6 Num_visit_last_1yr
+## 3              Pulse
+## 4         CREATININE
+## 5        BICARBONATE
+## 6        BP_Systolic
+## 7 Num_visit_last_1yr
+## 8               Mets
 ## ****Initial Scores: 
 ## 
 ## 
 ## ==================  ============  =====
 ## variable            interval      point
 ## ==================  ============  =====
-## ED_LOS              <0.665         15  
-##                     [0.665,1.33)   10  
-##                     [1.33,3.97)     4  
-##                     [3.97,6)        1  
-##                     >=6             0  
+## ED_LOS              <0.649          9  
+##                     [0.649,1.33)    6  
+##                     [1.33,3.93)     3  
+##                     [3.93,5.9)      0  
+##                     >=5.9           0  
 ##                                        
 ## Age                 <27             0  
-##                     [27,46)         3  
-##                     [46,78)        16  
-##                     [78,88)        20  
-##                     >=88           27  
+##                     [27,46)         2  
+##                     [46,78)        12  
+##                     [78,87)        16  
+##                     >=87           19  
 ##                                        
-## CREATININE          <46            10  
+## Pulse               <58             4  
+##                     [58,68)         0  
+##                     [68,97)         3  
+##                     [97,113)        6  
+##                     >=113          11  
+##                                        
+## CREATININE          <46             5  
 ##                     [46,61)         0  
-##                     [61,133)        1  
-##                     [133,580)       9  
-##                     >=580           4  
+##                     [61,136)        1  
+##                     [136,603)       7  
+##                     >=603           6  
 ##                                        
-## BICARBONATE         <16.8          13  
-##                     [16.8,20.5)     4  
-##                     [20.5,25.3)     0  
-##                     [25.3,28.1)     1  
-##                     >=28.1          6  
+## BICARBONATE         <16.7           8  
+##                     [16.7,20.5)     4  
+##                     [20.5,25.4)     0  
+##                     [25.4,28)       0  
+##                     >=28            4  
 ##                                        
-## LOS_prev            <4.94           0  
-##                     [4.94,15.5)     4  
-##                     >=15.5          5  
+## BP_Systolic         <99             8  
+##                     [99,112)        5  
+##                     [112,153)       1  
+##                     [153,179)       0  
+##                     >=179           0  
 ##                                        
 ## Num_visit_last_1yr  <1              0  
-##                     [1,4)          16  
-##                     >=4            29  
+##                     [1,4)          10  
+##                     >=4            19  
+##                                        
+## Mets                0               0  
+##                     1              20  
 ## ==================  ============  =====
 ## ***Performance (based on validation set):
-## mAUC: 0.7302, 95% bootstrap CI: 0.6948-0.7527
+## mAUC: 0.7737, 95% bootstrap CI: 0.7410-0.8008
 ## ***The cutoffs of each variables generated by the AutoScore-Ordinal are saved in cut_vec. You can decide whether to revise or fine-tune them
 ```
 
@@ -381,10 +393,10 @@ cut_vec <- AutoScore_Ordinal_weighting(
 ## variable        interval     point
 ## ==============  ===========  =====
 ## Age                 <27          0  
-##                     [27,46)      3  
-##                     [46,78)     16  
-##                     [78,88)     20  
-##                     >=88        27 
+##                     [27,46)      2  
+##                     [46,78)     12  
+##                     [78,87)     16 
+##                     >=87        19 
 ```
 
 -   Current cutoffs:`c(46, 78, 88)`. We can fine tune the cutoffs as
@@ -405,11 +417,12 @@ The mAUC and 95% bootstrap CI are reported after fine-tuning. The
 default number of bootstrap samples is 100.
 
 ``` r
-cut_vec$ED_LOS <- c(2 / 3, 4 / 3, 4)
-cut_vec$Age <- c(25, 45, 75, 90)
-cut_vec$CREATININE <- c(46, 135, 580)
-cut_vec$BICARBONATE <- c(17, 20, 28)
-cut_vec$LOS_prev <- c(5, 15)
+cut_vec$ED_LOS <- c(2 / 3, 4 / 3, 4, 6)
+cut_vec$Age <- c(25, 45, 75, 85)
+cut_vec$Pulse <- c(60, 70, 95, 115)
+cut_vec$CREATININE <- c(45, 60, 135, 595)
+cut_vec$BICARBONATE <- c(17, 20, 25, 28)
+cut_vec$BP_Systolic <- c(100, 110, 150, 180)
 scoring_table <- AutoScore_Ordinal_fine_tuning(train_set,
                                                validation_set,
                                                final_variables,
@@ -421,37 +434,51 @@ scoring_table <- AutoScore_Ordinal_fine_tuning(train_set,
 ## ==================  ============  =====
 ## variable            interval      point
 ## ==================  ============  =====
-## ED_LOS              <0.667         13  
-##                     [0.667,1.33)   10  
-##                     [1.33,4)        3  
-##                     >=4             0  
+## ED_LOS              <0.667          9  
+##                     [0.667,1.33)    6  
+##                     [1.33,4)        2  
+##                     [4,6)           0  
+##                     >=6             0  
 ##                                        
 ## Age                 <25             0  
-##                     [25,45)         6  
-##                     [45,75)        19  
-##                     [75,90)        23  
-##                     >=90           32  
+##                     [25,45)         3  
+##                     [45,75)        13  
+##                     [75,85)        17  
+##                     >=85           20  
 ##                                        
-## CREATININE          <46            10  
-##                     [46,135)        0  
-##                     [135,580)       6  
-##                     >=580           3  
+## Pulse               <60             2  
+##                     [60,70)         0  
+##                     [70,95)         2  
+##                     [95,115)        5  
+##                     >=115          12  
 ##                                        
-## BICARBONATE         <17            13  
-##                     [17,20)         3  
-##                     [20,28)         0  
-##                     >=28            6  
+## CREATININE          <45             6  
+##                     [45,60)         0  
+##                     [60,135)        1  
+##                     [135,595)       7  
+##                     >=595           6  
 ##                                        
-## LOS_prev            <5              0  
-##                     [5,15)          3  
-##                     >=15            6  
+## BICARBONATE         <17             8  
+##                     [17,20)         4  
+##                     [20,25)         0  
+##                     [25,28)         0  
+##                     >=28            4  
+##                                        
+## BP_Systolic         <100            8  
+##                     [100,110)       5  
+##                     [110,150)       1  
+##                     [150,180)       0  
+##                     >=180           0  
 ##                                        
 ## Num_visit_last_1yr  <1              0  
-##                     [1,4)          16  
-##                     >=4            26  
+##                     [1,4)           9  
+##                     >=4            19  
+##                                        
+## Mets                0               0  
+##                     1              19  
 ## ==================  ============  =====
 ## ***Performance (based on Validation Set, after fine-tuning):
-## mAUC: 0.7335, 95% bootstrap CI: 0.7046-0.7560
+## mAUC: 0.7793, 95% bootstrap CI: 0.7350-0.8053
 ```
 
 ### STEP(v): Evaluate final risk scores on test dataset (AutoScore Module 6)
@@ -468,16 +495,16 @@ pred_score <- AutoScore_Ordinal_testing(
   with_label = TRUE, n_boot = 100
 )
 ## ***Performance using AutoScore-Ordinal (based on unseen test Set):
-## mAUC: 0.7500, 95% bootstrap CI: 0.7312-0.7660
-## Generalised c-index: 0.7357, 95% bootstrap CI: 0.7206-0.7539
+## mAUC: 0.7431, 95% bootstrap CI: 0.7221-0.7623
+## Generalised c-index: 0.7197, 95% bootstrap CI: 0.6984-0.7348
 head(pred_score)
 ##   pred_score Label
-## 1         41     1
-## 2         19     1
-## 3         45     1
-## 4          6     1
-## 5         42     1
-## 6         22     1
+## 1         36     1
+## 2         17     1
+## 3         17     1
+## 4         25     1
+## 5         49     1
+## 6         24     1
 ```
 
 -   Users could use the `pred_score` for further analysis or export it

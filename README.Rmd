@@ -10,11 +10,7 @@ output:
 ```{r setup, include=FALSE}
 set.seed(1234)
 library(knitr)
-<<<<<<< HEAD
-opts_chunk$set(echo = TRUE, collapse = TRUE)
-=======
 opts_chunk$set(echo = TRUE, collapse = TRUE, cache = TRUE)
->>>>>>> d1bf2bf226034d10d6de4a118a0ec69a3dfc6569
 ```
 
 # **AutoScore-Ordinal Introduction**
@@ -98,7 +94,7 @@ library(AutoScoreOrdinal)
 - `sample_data_ordinal` has 20000 simulated samples, with similar distribution
 to the data used in the paper.
 ```{r}
-load("../data/sample_data_ordinal.rda")
+data("sample_data_ordinal")
 head(sample_data_ordinal)
 ```
 
@@ -187,15 +183,13 @@ final_variables <- names(ranking[1:num_var])
 num_var <- 9
 final_variables <- names(ranking[1:num_var])
 
-# Example 3: Top 6 variables, the 9th and 14th variable are selected
-num_var <- 6
-final_variables <- names(ranking[c(1:num_var, 9, 14)])
+# Example 3: Top 6 variables, the 13th and 16th variable are selected
+final_variables <- names(ranking[c(1:6, 13, 16)])
 ```
 
 
 ```{r finalvariab2,include=FALSE}
-num_var <- 6
-final_variables <- names(ranking[1:num_var])
+final_variables <- names(ranking[c(1:6, 13, 16)])
 ```
 
 ### STEP(iii): Generate initial scores with the final list of variables (Re-run AutoScore Modules 2+3)
@@ -222,10 +216,10 @@ cut_vec <- AutoScore_Ordinal_weighting(
 ## variable        interval     point
 ## ==============  ===========  =====
 ## Age                 <27          0  
-##                     [27,46)      3  
-##                     [46,78)     16  
-##                     [78,88)     20  
-##                     >=88        27 
+##                     [27,46)      2  
+##                     [46,78)     12  
+##                     [78,87)     16 
+##                     >=87        19 
 ```
 
 - Current cutoffs:`c(46, 78, 88)`. We can fine tune the cutoffs as follows:
@@ -244,11 +238,12 @@ cut_vec$Age <- c(45, 75, 90)
 The mAUC and 95% bootstrap CI are reported after fine-tuning. The default number
 of bootstrap samples is 100.
 ```{r scoring, warning = FALSE}
-cut_vec$ED_LOS <- c(2 / 3, 4 / 3, 4)
-cut_vec$Age <- c(25, 45, 75, 90)
-cut_vec$CREATININE <- c(46, 135, 580)
-cut_vec$BICARBONATE <- c(17, 20, 28)
-cut_vec$LOS_prev <- c(5, 15)
+cut_vec$ED_LOS <- c(2 / 3, 4 / 3, 4, 6)
+cut_vec$Age <- c(25, 45, 75, 85)
+cut_vec$Pulse <- c(60, 70, 95, 115)
+cut_vec$CREATININE <- c(45, 60, 135, 595)
+cut_vec$BICARBONATE <- c(17, 20, 25, 28)
+cut_vec$BP_Systolic <- c(100, 110, 150, 180)
 scoring_table <- AutoScore_Ordinal_fine_tuning(train_set,
                                                validation_set,
                                                final_variables,

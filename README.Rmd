@@ -108,7 +108,9 @@ data("sample_data_ordinal")
 head(sample_data_ordinal)
 ```
 
-### Data preprocessing (Users to check the following)
+### Data preprocessing 
+
+**Users to check the following:**
 
 - Handle missing values (AutoScore-Ordinal requires a complete dataset).
 - Remove special characters from variable names, e.g., `[`, `]`, `(`, `)`,`,`.
@@ -121,7 +123,9 @@ using the same name) and is coded as class: factor.
 - Handle outliers (optional).
 - Check variable distribution (optional).
 
-### AutoScore-Ordinal preprocessing (Users to check the following)
+### AutoScore-Ordinal preprocessing
+
+**Users to check the following:**
 
 - Check if data fulfil the basic requirement by AutoScore-Ordinal.
 - Fix the problem if you see any warnings.

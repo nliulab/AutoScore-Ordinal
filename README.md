@@ -12,10 +12,9 @@ Generating Scoring Models for Ordinal Outcomes
     -   [Install from GitHub:](#install-from-github)
     -   [Load R package](#load-r-package)
     -   [Load data](#load-data)
-    -   [Data preprocessing (Users to check the
-        following)](#data-preprocessing-users-to-check-the-following)
-    -   [AutoScore-Ordinal preprocessing (Users to check the
-        following)](#autoscore-ordinal-preprocessing-users-to-check-the-following)
+    -   [Data preprocessing](#data-preprocessing)
+    -   [AutoScore-Ordinal
+        preprocessing](#autoscore-ordinal-preprocessing)
 -   [**AutoScore-Ordinal
     Demonstration**](#autoscore-ordinal-demonstration)
     -   [Prepare training, validation, and test
@@ -114,7 +113,7 @@ Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. AutoScore: A Machine Learnin
 # From Github
 install.packages("devtools")
 library(devtools)
-install_github(repo = "nliulab/AutoScoreOrdinal")
+install_github(repo = "nliulab/AutoScore-Ordinal")
 ```
 
 ### Load R package
@@ -185,7 +184,9 @@ head(sample_data_ordinal)
 ## 6         0     0      0           0    0
 ```
 
-### Data preprocessing (Users to check the following)
+### Data preprocessing
+
+**Users to check the following:**
 
 -   Handle missing values (AutoScore-Ordinal requires a complete
     dataset).
@@ -200,7 +201,9 @@ head(sample_data_ordinal)
 -   Handle outliers (optional).
 -   Check variable distribution (optional).
 
-### AutoScore-Ordinal preprocessing (Users to check the following)
+### AutoScore-Ordinal preprocessing
+
+**Users to check the following:**
 
 -   Check if data fulfil the basic requirement by AutoScore-Ordinal.
 -   Fix the problem if you see any warnings.

@@ -1,14 +1,27 @@
 Package: AutoScoreOrdinal
 Type: Package
-Title: AutoScore-Ordinal: An Interpretable Machine Learning Framework for Generating Scoring Models for Ordinal Outcomes
-Version: 0.2.0
+Title: AutoScore-Ordinal: An Interpretable Machine Learning Framework for 
+    Generating Scoring Models for Ordinal Outcomes
+Version: 1.0.0
 Author: Yilin Ning, Feng Xie, Han Yuan
 Maintainer: Yilin Ning <ningyilinnyl@gmail.com>
-Description: An Interpretable Machine Learning Framework for Generating Scoring Models for Ordinal Outcomes.
+Description: An Interpretable Machine Learning Framework for Generating Scoring 
+    Models for Ordinal Outcomes. Extends the AutoScore framework by using the 
+    proportional odds model to derive scores.
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
+Imports: 
+    Hmisc,
+    ggplot2,
+    knitr,
+    ordinal,
+    pROC,
+    randomForest,
+    tableone,
+    coxed,
+    survival
 Suggests: 
     knitr,
     rmarkdown

@@ -61,5 +61,8 @@ quantiles = c(0, 0.05, 0.2, 0.8, 0.95, 1)
 }
 }
 \seealso{
-
+\code{\link{AutoScore_Ordinal_rank}},
+  \code{\link{AutoScore_Ordinal_parsimony}},
+  \code{\link{AutoScore_Ordinal_fine_tuning}},
+  \code{\link{AutoScore_Ordinal_testing}}.
 }

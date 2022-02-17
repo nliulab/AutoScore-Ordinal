@@ -49,5 +49,8 @@ ranking <- AutoScore_Ordinal_rank(train_set, ntree=100)
 }
 }
 \seealso{
-
+\code{\link{AutoScore_Ordinal_parsimony}},
+  \code{\link{AutoScore_Ordinal_weighting}},
+  \code{\link{AutoScore_Ordinal_fine_tuning}},
+  \code{\link{AutoScore_Ordinal_testing}}.
 }

@@ -1,31 +1,45 @@
 # **AutoScore-Ordinal Introduction**
 
+-   GitHub Package (version 1.0.0)
+
 ### Description
 
-<!--
-AutoScore is a novel machine learning framework to automate the development of
-interpretable clinical scoring models. AutoScore consists of six modules: 1)
-variable ranking with machine learning, 2) variable transformation, 3) score
-derivation, 4) model selection, 5) domain knowledge-based score fine-tuning, and
-6) performance evaluation. The AutoScore is elaborated in the article
-(<http://dx.doi.org/10.2196/21798>) and its flowchart is shown in the following
-figure. AutoScore could seamlessly generate risk scores using a parsimonious set
-of variables, which can be easily implemented and validated in clinical
-practice. Moreover, it enables users to build transparent and interpretable
+AutoScore-Ordinal is a novel machine learning framework to automate the
+development of interpretable clinical scoring models for ordinal
+outcomes, which expands the [original AutoScore framework for binary
+outcomes](https://github.com/nliulab/AutoScore). AutoScore-Ordinal
+modifies the six modules of the AutoScore framework to handle ordinal
+outcomes: 1) variable ranking with machine learning, 2) variable
+transformation, 3) score derivation (now from the proportional odds
+model), 4) model selection, 5) domain knowledge-based score fine-tuning,
+and 6) performance evaluation (using the mean AUC (mAUC) across binary
+classifications). The AutoScore-Ordinal is elaborated in the manuscript
+*“AutoScore-Ordinal: An Interpretable Machine Learning Framework for
+Generating Scoring Models for Ordinal Outcomes”* and its flowchart is
+shown in the following figure, where blue shading indicate modifications
+from the original AutoScore framework. AutoScore-Ordinal could
+seamlessly generate risk scores using a parsimonious set of variables,
+which can be easily implemented and validated in clinical practice.
+Moreover, it enables users to build transparent and interpretable
 clinical scores quickly in a straightforward manner.
--->
+
+<div class="figure" style="text-align: center">
+
+<img src="figures/fig1.png" width="70%"/>
+
+</div>
 
 ### Functions and pipeline
 
 The five pipeline functions: `AutoScore_Ordinal_rank()`,
 `AutoScore_Ordinal_parsimony()`, `AutoScore_Ordinal_weighting()`,
 `AutoScore_fine_Ordinal_tuning()` and `AutoScore_Ordinal_testing()`
-constitute the 5-step AutoScore-based process for generating point-based
-clinical scores. This 5-step process gives users the flexibility of
-customization (e.g., determining the final list of variables according
-to the parsimony plot, and fine-tuning the cutoffs in variable
-transformation). Please follow the step-by-step instructions (in Demos)
-to build your own scores.
+constitute the 5-step AutoScore-Ordinal-based process for generating
+point-based clinical scores. This 5-step process gives users the
+flexibility of customization (e.g., determining the final list of
+variables according to the parsimony plot, and fine-tuning the cutoffs
+in variable transformation). Please follow the step-by-step instructions
+(in [Demo](#Demo)) to build your own scores.
 
 -   STEP(i): `AutoScore_Ordinal_rank()` - Rank variables with random
     forest for multiclass classification (AutoScore-Ordinal Module 1)
@@ -38,14 +52,15 @@ to build your own scores.
     revising `cut_vec` with domain knowledge (AutoScore-Ordinal
     Module 5)
 -   STEP(v): `AutoScore_Ordinal_testing()` - Evaluate the final score
-    with multiclass ROC analysis (AutoScore-Ordinal Module 6)
+    using performence metrics for ordinal classification (mAUC and
+    generalised c-index) (AutoScore-Ordinal Module 6)
 
 Note: This is just the initial version of the AutoScore-Ordinal. Further
 version will be developed and updated.
 
+<!--
 ### Citation
 
-<!--
 Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. AutoScore: A Machine Learning-Based Automatic Clinical Score Generator and Its Application to Mortality Prediction Using Electronic Health Records. JMIR Medical Informatics 2020;8(10):e21798 (<http://dx.doi.org/10.2196/21798>)
 -->
 
@@ -139,21 +154,22 @@ head(sample_data_ordinal)
 
 ### Data preprocessing (Users to check the following)
 
--   Handle missing values (AutoScore requires a complete dataset).
+-   Handle missing values (AutoScore-Ordinal requires a complete
+    dataset).
 -   Remove special characters from variable names, e.g., `[`, `]`, `(`,
     `)`,`,`. (Suggest using `_` to replace them if needed)
 -   Name of the variable should be unique and not entirely included by
     other variable names.
 -   Ensure that the dependent variable is named “label” (make sure no
-    variables using the same name).
+    variables using the same name) and is coded as class: factor.
 -   Independent variables should be numeric (class: num/int) or
     categorical (class: factor/logic).
 -   Handle outliers (optional).
 -   Check variable distribution (optional).
 
-### AutoScore preprocessing (Users to check the following)
+### AutoScore-Ordinal preprocessing (Users to check the following)
 
--   Check if data fulfil the basic requirement by AutoScore.
+-   Check if data fulfil the basic requirement by AutoScore-Ordinal.
 -   Fix the problem if you see any warnings.
 
 ``` r
@@ -169,7 +185,7 @@ check_data(sample_data_ordinal)
 ## **AutoScore-Ordinal Demo**
 
 In this Demo, we demonstrate the use of AutoScore-Ordinal on a
-comparably large dataset where separate training and validation sets are
+relatively large dataset where separate training and validation sets are
 available. Please note that it is just a demo using simulated data, and
 thus, the result might not be clinically meaningful.
 
@@ -179,7 +195,9 @@ thus, the result might not be clinically meaningful.
     test models.
 -   Option 2: Use demo codes below to randomly split your dataset into
     training, validation, and test datasets (70%, 10%, 20%,
-    respectively).
+    respectively), possibly stratified by outcome categories
+    (`strat_by_label = TRUE`) to ensure they are well represented in all
+    three datasets.
 
 ``` r
 set.seed(1234)
@@ -190,7 +208,7 @@ validation_set <- out_split$validation_set
 test_set <- out_split$test_set
 ```
 
-### STEP(i): Generate variable ranking list (AutoScore Module 1)
+### STEP(i): Generate variable ranking list (AutoScore-Ordinal Module 1)
 
 -   `ntree`: Number of trees in the random forest algorithm (Default:
     100).
@@ -228,7 +246,7 @@ ranking <- AutoScore_Ordinal_rank(train_set = train_set, ntree = 100)
 ##                 8.7027377                 0.2250472
 ```
 
-### STEP(ii): Select the best model with parsimony plot (AutoScore Modules 2+3+4)
+### STEP(ii): Select the best model with parsimony plot (AutoScore-Ordinal Modules 2+3+4)
 
 -   `nmin`: Minimum number of selected variables (Default: 1).
 -   `nmax`: Maximum number of selected variables (Default: 20).
@@ -247,8 +265,7 @@ ranking <- AutoScore_Ordinal_rank(train_set = train_set, ntree = 100)
 
 ``` r
 mAUC <- AutoScore_Ordinal_parsimony(
-  train_set,
-  validation_set,
+  train_set = train_set, validation_set = validation_set, 
   rank = ranking,
   max_score = 100,
   n_min = 1,
@@ -293,18 +310,21 @@ mAUC <- AutoScore_Ordinal_parsimony(
 num_var <- 6
 final_variables <- names(ranking[1:num_var])
 
-# Example 2: Top 9 variables are selected
-num_var <- 9
+# Example 2: Top 16 variables are selected
+num_var <- 16
 final_variables <- names(ranking[1:num_var])
 
 # Example 3: Top 6 variables, the 13th and 16th variable are selected
 final_variables <- names(ranking[c(1:6, 13, 16)])
 ```
 
-### STEP(iii): Generate initial scores with the final list of variables (Re-run AutoScore Modules 2+3)
+### STEP(iii): Generate initial scores with the final list of variables (Re-run AutoScore-Ordinal Modules 2+3)
 
 -   Generate `cut_vec` with current cutoffs of continuous variables,
     which can be fine-tuned in STEP(iv).
+-   Performance of resulting scores is evaluated using mAUC, with 95%
+    confidence interval (CI) computed using bootstrap (by default from
+    `n_boot = 100` bootstrap samples.
 
 ``` r
 cut_vec <- AutoScore_Ordinal_weighting(
@@ -378,11 +398,11 @@ cut_vec <- AutoScore_Ordinal_weighting(
 ## ***The cutoffs of each variables generated by the AutoScore-Ordinal are saved in cut_vec. You can decide whether to revise or fine-tune them
 ```
 
-### STEP(iv): Fine-tune the initial score generated in STEP(iii) (AutoScore Module 5 & Re-run AutoScore Modules 2+3)
+### STEP(iv): Fine-tune the initial score generated in STEP(iii) (AutoScore-Ordinal Module 5 & Re-run AutoScore-Ordinal Modules 2+3)
 
 -   Revise `cut_vec` with domain knowledge to update the scoring table
-    (AutoScore Module 5).
--   Re-run AutoScore Modules 2+3 to generate the updated scores.
+    (AutoScore-Ordinal Module 5).
+-   Re-run AutoScore-Ordinal Modules 2+3 to generate the updated scores.
 -   Users can choose any cutoff values and/or any number of categories,
     but are suggested to choose numbers close to the automatically
     determined values.
@@ -399,22 +419,22 @@ cut_vec <- AutoScore_Ordinal_weighting(
 ##                     >=87        19 
 ```
 
--   Current cutoffs:`c(46, 78, 88)`. We can fine tune the cutoffs as
+-   Current cutoffs:`c(27, 46, 78, 87)`. We can fine tune the cutoffs as
     follows:
 
 ``` r
 # Example 1: rounding to a nice number
-cut_vec$Age <- c(25, 45, 75, 90)
+cut_vec$Age <- c(25, 45, 75, 85)
 
 # Example 2: changing cutoffs according to clinical knowledge or preference 
-cut_vec$Age <- c(25, 50, 75, 90)
+cut_vec$Age <- c(25, 50, 75, 85)
 
 # Example 3: combining categories
-cut_vec$Age <- c(45, 75, 90)
+cut_vec$Age <- c(45, 75, 85)
 ```
 
 The mAUC and 95% bootstrap CI are reported after fine-tuning. The
-default number of bootstrap samples is 100.
+default number of bootstrap samples is again `n_boot = 100`.
 
 ``` r
 cut_vec$ED_LOS <- c(2 / 3, 4 / 3, 4, 6)
@@ -423,11 +443,11 @@ cut_vec$Pulse <- c(60, 70, 95, 115)
 cut_vec$CREATININE <- c(45, 60, 135, 595)
 cut_vec$BICARBONATE <- c(17, 20, 25, 28)
 cut_vec$BP_Systolic <- c(100, 110, 150, 180)
-scoring_table <- AutoScore_Ordinal_fine_tuning(train_set,
-                                               validation_set,
-                                               final_variables,
-                                               cut_vec,
-                                               max_score = 100, n_boot = 100)
+scoring_table <- AutoScore_Ordinal_fine_tuning(
+  train_set = train_set, validation_set = validation_set,
+  final_variables = final_variables, cut_vec = cut_vec,
+  max_score = 100, n_boot = 100
+)
 ## ***Fine-tuned Scores: 
 ## 
 ## 
@@ -481,16 +501,15 @@ scoring_table <- AutoScore_Ordinal_fine_tuning(train_set,
 ## mAUC: 0.7793, 95% bootstrap CI: 0.7350-0.8053
 ```
 
-### STEP(v): Evaluate final risk scores on test dataset (AutoScore Module 6)
+### STEP(v): Evaluate final risk scores on test dataset (AutoScore-Ordinal Module 6)
 
 The mAUC and generalised c-index are reported for the test set, with 95%
-bootstrap CI computed from 100 bootstrap samples (default).
+bootstrap CI computed from `n_boot = 100` bootstrap samples (default).
 
 ``` r
 pred_score <- AutoScore_Ordinal_testing(
   test_set = test_set, 
-  final_variables = final_variables, 
-  cut_vec = cut_vec, 
+  final_variables = final_variables, cut_vec = cut_vec, 
   score_table = scoring_table, 
   with_label = TRUE, n_boot = 100
 )

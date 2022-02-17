@@ -46,5 +46,8 @@ scoring_table <- AutoScore_fine_tuning(train_set, validation_set,
 }
 }
 \seealso{
-
+\code{\link{AutoScore_Ordinal_rank}},
+  \code{\link{AutoScore_Ordinal_parsimony}},
+  \code{\link{AutoScore_Ordinal_weighting}},
+  \code{\link{AutoScore_Ordinal_testing}}.
 }

@@ -37,8 +37,8 @@
 #' @seealso \code{\link{AutoScore_Ordinal_parsimony}},
 #'   \code{\link{AutoScore_Ordinal_weighting}},
 #'   \code{\link{AutoScore_Ordinal_fine_tuning}},
-#'   \code{\link{AutoScore_Ordinal_testing}.
-#' @import randomForest
+#'   \code{\link{AutoScore_Ordinal_testing}}.
+#' @importFrom randomForest randomForest importance
 #' @export
 AutoScore_Ordinal_rank <- function(train_set, ntree = 100) {
   train_set$label <- ordered(train_set$label) # Ordered factor
@@ -124,7 +124,7 @@ AutoScore_Ordinal_rank <- function(train_set, ntree = 100) {
 #' @seealso \code{\link{AutoScore_Ordinal_rank}},
 #'   \code{\link{AutoScore_Ordinal_weighting}},
 #'   \code{\link{AutoScore_Ordinal_fine_tuning}},
-#'   \code{\link{AutoScore_Ordinal_testing}.
+#'   \code{\link{AutoScore_Ordinal_testing}}.
 #' @export
 #' @import  pROC
 AutoScore_Ordinal_parsimony <- function(train_set, validation_set, rank,
@@ -282,7 +282,7 @@ AutoScore_Ordinal_parsimony <- function(train_set, validation_set, rank,
 #' @seealso \code{\link{AutoScore_Ordinal_rank}},
 #'   \code{\link{AutoScore_Ordinal_parsimony}},
 #'   \code{\link{AutoScore_Ordinal_fine_tuning}},
-#'   \code{\link{AutoScore_Ordinal_testing}.
+#'   \code{\link{AutoScore_Ordinal_testing}}.
 #' @export
 #' @import knitr
 AutoScore_Ordinal_weighting <- function(train_set, validation_set, final_variables,
@@ -348,7 +348,7 @@ AutoScore_Ordinal_weighting <- function(train_set, validation_set, final_variabl
 #' @seealso \code{\link{AutoScore_Ordinal_rank}},
 #'   \code{\link{AutoScore_Ordinal_parsimony}},
 #'   \code{\link{AutoScore_Ordinal_weighting}},
-#'   \code{\link{AutoScore_Ordinal_testing}.
+#'   \code{\link{AutoScore_Ordinal_testing}}.
 #' @import pROC
 #' @import ggplot2
 #' @export
@@ -804,6 +804,7 @@ print_scoring_table <- function(scoring_table, final_variable) {
 }
 
 
+#' Compute risk scores for data given variables selected, cut-off values and scoring table
 #' @inheritParams AutoScore_Ordinal_testing
 #' @param data A processed \code{data.frame} that contains data for validation
 #'   or testing purpose. This \code{data.frame} must have variable \code{label}
@@ -821,6 +822,7 @@ compute_final_score <- function(data, final_variables, cut_vec,
   }
   data_3$total_score
 }
+#' Evaluate model performance on data
 #' @param data A processed \code{data.frame} that contains data for validation
 #'   or testing purpose. This \code{data.frame} must have variable \code{label}
 #'   and should have same format as \code{train_set} (same variable names and

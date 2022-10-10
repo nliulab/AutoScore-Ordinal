@@ -30,8 +30,12 @@ clinical scores quickly in a straightforward manner.
 
 ## Citation
 
-Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. AutoScore: A Machine Learning-Based Automatic Clinical Score Generator and Its Application to Mortality Prediction Using Electronic Health Records. JMIR Medical Informatics 2020;8(10):e21798 (<http://dx.doi.org/10.2196/21798>)
--->
+- Saffari SE, Ning Y, Xie F, Chakraborty B, Volovici V, Vaughan R, Ong
+MEH, Liu N, AutoScore-Ordinal: An interpretable machine learning
+framework for generating scoring models for ordinal outcomes,
+arXiv:2202.08407 (<https://doi.org/10.48550/arxiv.2202.08407>)
+
+- Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. AutoScore: A Machine Learning-Based Automatic Clinical Score Generator and Its Application to Mortality Prediction Using Electronic Health Records. JMIR Medical Informatics 2020;8(10):e21798 (<http://dx.doi.org/10.2196/21798>)
 
 ### Contact
 

@@ -2,10 +2,7 @@ AutoScore-Ordinal: An Interpretable Machine Learning Framework for
 Generating Scoring Models for Ordinal Outcomes
 ================
 
-## Important Information
--   **AutoScore-Ordinal has been merged with AutoScore package. Please refer to [**AutoScore**](https://github.com/nliulab/AutoScore/) for using AutoScore-Ordinal functions**
--   **Check out bookdown pages (https://nliulab.github.io/AutoScore/) for guidebook and tutorial**
--   **Check out [**AutoScore Related Published Papers**](https://github.com/nliulab/AutoScore/blob/master/README_Application.md)**
+**AutoScore-Ordinal has been merged with the [AutoScore package](https://github.com/nliulab/AutoScore/). Please go to [AutoScore bookdown page](https://nliulab.github.io/AutoScore/) for a full tutorial.**
 
 ## AutoScore-Ordinal Description
 
@@ -30,21 +27,18 @@ clinical scores quickly in a straightforward manner.
 
 ## Citation
 
-- Saffari SE, Ning Y, Xie F, Chakraborty B, Volovici V, Vaughan R, Ong
-MEH, Liu N, AutoScore-Ordinal: An interpretable machine learning
-framework for generating scoring models for ordinal outcomes,
-arXiv:2202.08407 (<https://doi.org/10.48550/arxiv.2202.08407>)
+* Saffari SE, Ning Y, Xie F, Chakraborty B, Volovici V, Vaughan R, Ong MEH, Liu N, [AutoScore-Ordinal: An interpretable machine learning framework for generating scoring models for ordinal outcomes](https://doi.org/10.48550/arxiv.2202.08407), arXiv:2202.08407.
 
-- Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. AutoScore: A Machine Learning-Based Automatic Clinical Score Generator and Its Application to Mortality Prediction Using Electronic Health Records. JMIR Medical Informatics 2020;8(10):e21798 (<http://dx.doi.org/10.2196/21798>)
+* Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. [AutoScore: A machine learning-based automatic clinical score generator and its application to mortality prediction using electronic health records](http://dx.doi.org/10.2196/21798). JMIR Medical Informatics 2020; 8(10): e21798.
 
 ### Contact
 
 -   Yilin Ning (Email: <yilin.ning@duke-nus.edu.sg>)
 -   Nan Liu (Email: <liu.nan@duke-nus.edu.sg>)
 
-## AutoScore-Ordinal Installation
+# AutoScore package installation
 
-### Install the development version from GitHub or the stable version from CRAN (recommended):
+Install from GitHub or CRAN：
 
 ``` r
 # From Github
@@ -55,12 +49,14 @@ install_github(repo = "nliulab/AutoScore", build_vignettes = TRUE)
 # From CRAN (recommended)
 install.packages("AutoScore")
 ```
+[devtools]: https://github.com/hadley/devtools
 
-### Load R package
+Load AutoScore package: 
 
 ``` r
 library(AutoScore)
 ```
 
-Please go to our bookdown page (<https://nliulab.github.io/AutoScore/>)
-for looking at the full tutorial of using AutoScore package
+Please go to our [bookdown page](https://nliulab.github.io/AutoScore/)
+for a full tutorial on AutoScore usage.
+

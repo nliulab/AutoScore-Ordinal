@@ -2,10 +2,6 @@ AutoScore-Ordinal: An Interpretable Machine Learning Framework for
 Generating Scoring Models for Ordinal Outcomes
 ================
 
-> ### AutoScore-Ordinal has been merged with the [AutoScore package](https://github.com/nliulab/AutoScore/). Please visit [AutoScore bookdown page](https://nliulab.github.io/AutoScore/) for a full tutorial.
-
-# AutoScore-Ordinal Description
-
 AutoScore-Ordinal is a novel machine learning framework to automate the
 development of interpretable clinical scoring models for ordinal
 outcomes, which expands the [original AutoScore framework for binary
@@ -25,6 +21,9 @@ which can be easily implemented and validated in clinical practice.
 Moreover, it enables users to build transparent and interpretable
 clinical scores quickly in a straightforward manner.
 
+> ### AutoScore-Ordinal has been merged with the [AutoScore package](https://github.com/nliulab/AutoScore/). 
+> ### Please visit [AutoScore bookdown page](https://nliulab.github.io/AutoScore/) for a full tutorial.
+
 ## Citation
 
 * Saffari SE, Ning Y, Xie F, Chakraborty B, Volovici V, Vaughan R, Ong MEH, Liu N, [AutoScore-Ordinal: An interpretable machine learning framework for generating scoring models for ordinal outcomes](https://doi.org/10.48550/arxiv.2202.08407), arXiv:2202.08407.
@@ -36,7 +35,7 @@ clinical scores quickly in a straightforward manner.
 -   Yilin Ning (Email: <yilin.ning@duke-nus.edu.sg>)
 -   Nan Liu (Email: <liu.nan@duke-nus.edu.sg>)
 
-# AutoScore package installation
+## Package installation
 
 Install from GitHub or CRAN：
 

@@ -36,7 +36,7 @@ clinical scores quickly in a straightforward manner.
 
 ## Package installation
 
-Install from GitHub or CRAN：
+Install from GitHub or CRAN:
 
 ``` r
 # From Github

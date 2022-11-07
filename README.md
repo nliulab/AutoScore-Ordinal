@@ -25,7 +25,7 @@ clinical scores quickly in a straightforward manner.
 
 ## Citation
 
-* Saffari SE, Ning Y, Xie F, Chakraborty B, Volovici V, Vaughan R, Ong MEH, Liu N, [AutoScore-Ordinal: An interpretable machine learning framework for generating scoring models for ordinal outcomes](https://doi.org/10.48550/arxiv.2202.08407), arXiv:2202.08407.
+* Saffari SE, Ning Y, Xie F, Chakraborty B, Volovici V, Vaughan R, Ong MEH, Liu N, [AutoScore-Ordinal: An interpretable machine learning framework for generating scoring models for ordinal outcomes](https://doi.org/10.1186/s12874-022-01770-y), BMC Medical Research Methodology 2022; 22: 286.
 
 * Xie F, Chakraborty B, Ong MEH, Goldstein BA, Liu N. [AutoScore: A machine learning-based automatic clinical score generator and its application to mortality prediction using electronic health records](http://dx.doi.org/10.2196/21798). JMIR Medical Informatics 2020; 8(10): e21798.
 
